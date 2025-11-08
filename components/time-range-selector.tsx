@@ -13,6 +13,9 @@ const PREDEFINED_RANGES = [
   { label: "Last week", value: "last-week" },
   { label: "Last month", value: "last-month" },
   { label: "Last year", value: "last-year" },
+  { label: "Last 2 years", value: "last-2-years" },
+  { label: "Last 5 years", value: "last-5-years" },
+  { label: "All time", value: "all-time" },
 ] as const;
 
 const formatDateForAPI = (date: Date): string => {
