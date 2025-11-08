@@ -79,9 +79,9 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
       {} as Record<string, number>
     );
 
-    return Object.entries(grouped).map(([date, downloads]) => ({
+    return Object.entries(grouped).map(([date, downloadCount]) => ({
       date,
-      downloads,
+      downloads: downloadCount,
     }));
   };
 
@@ -173,7 +173,9 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
                   className="[&_.flex.justify-between]:gap-8"
                   indicator="dot"
                   labelFormatter={(value, payload) => {
-                    if (!payload?.[0]?.payload) return value;
+                    if (!payload?.[0]?.payload) {
+                      return value;
+                    }
                     const startDate = new Date(value);
                     const endDate = new Date(payload[0].payload.dateEnd);
                     const formatDate = (date: Date) =>
