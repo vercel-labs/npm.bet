@@ -1,5 +1,6 @@
 "use client";
 
+import { Command as CommandPrimitive } from "cmdk";
 import { PackageSearchIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
@@ -7,13 +8,13 @@ import {
   type NpmSearchResponse,
   searchPackages,
 } from "@/actions/package/search";
+import { cn } from "@/lib/utils";
 import { usePackages } from "@/providers/filters";
 import { Badge } from "./ui/badge";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "./ui/command";
@@ -45,23 +46,7 @@ export const PackageSearch = () => {
 
   return (
     <div className="-translate-x-1/2 absolute bottom-4 left-1/2 w-full max-w-md">
-      <Command className="w-full rounded-lg border **:data-[slot=command-input-wrapper]:border-none">
-        {packages.length > 0 && (
-          <div className="flex flex-wrap gap-2 border-border border-b p-2">
-            {packages.map((pkg) => (
-              <Badge className="gap-1 pr-1 pl-2" key={pkg} variant="secondary">
-                {pkg}
-                <button
-                  className="rounded-sm p-0.5 transition-colors hover:bg-secondary-foreground/20"
-                  onClick={() => handleRemove(pkg)}
-                  type="button"
-                >
-                  <XIcon className="size-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
+      <Command className="w-full rounded-lg border">
         {shouldShowResults && (
           <CommandList>
             {error && (
@@ -92,11 +77,29 @@ export const PackageSearch = () => {
             )}
           </CommandList>
         )}
-        <CommandInput
-          onValueChange={setValue}
-          placeholder="Search for a package"
-          value={value}
-        />
+        <div className="flex flex-wrap items-center gap-2 px-3">
+          <PackageSearchIcon className="size-4 shrink-0 opacity-50" />
+          {packages.map((pkg) => (
+            <Badge className="gap-1 pr-1 pl-2" key={pkg} variant="secondary">
+              {pkg}
+              <button
+                className="rounded-sm p-0.5 transition-colors hover:bg-secondary-foreground/20"
+                onClick={() => handleRemove(pkg)}
+                type="button"
+              >
+                <XIcon className="size-3" />
+              </button>
+            </Badge>
+          ))}
+          <CommandPrimitive.Input
+            className={cn(
+              "flex flex-1 rounded-md bg-transparent py-2 text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            )}
+            onValueChange={setValue}
+            placeholder="Search..."
+            value={value}
+          />
+        </div>
       </Command>
     </div>
   );
