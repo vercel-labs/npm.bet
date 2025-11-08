@@ -1,9 +1,10 @@
 "use client";
 
-import { PackageSearchIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { PackageSearchIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
+import { usePackages } from "@/providers/filters";
+import { Badge } from "./ui/badge";
 import {
   Command,
   CommandEmpty,
@@ -42,7 +43,7 @@ const fetcher = async (url: string): Promise<NpmSearchResponse> => {
 
 export const PackageSearch = () => {
   const [value, setValue] = useState("");
-  const router = useRouter();
+  const [packages, setPackages] = usePackages();
   const { data, error } = useSWR<NpmSearchResponse>(
     value
       ? `https://registry.npmjs.com/-/v1/search?text=${encodeURIComponent(value)}&size=20`
@@ -55,12 +56,35 @@ export const PackageSearch = () => {
   );
 
   const handleSelect = (packageName: string) => {
-    router.push(`/${packageName}`);
+    if (!packages.includes(packageName)) {
+      setPackages([...packages, packageName]);
+    }
+    setValue("");
+  };
+
+  const handleRemove = (packageName: string) => {
+    setPackages(packages.filter((pkg) => pkg !== packageName));
   };
 
   return (
     <div className="-translate-x-1/2 absolute bottom-4 left-1/2 w-full max-w-md">
       <Command className="w-full rounded-lg border **:data-[slot=command-input-wrapper]:border-none">
+        {packages.length > 0 && (
+          <div className="flex flex-wrap gap-2 border-border border-b p-2">
+            {packages.map((pkg) => (
+              <Badge className="gap-1 pr-1 pl-2" key={pkg} variant="secondary">
+                {pkg}
+                <button
+                  className="rounded-sm p-0.5 transition-colors hover:bg-secondary-foreground/20"
+                  onClick={() => handleRemove(pkg)}
+                  type="button"
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
         <CommandList>
           {error && (
             <CommandEmpty>Failed to load packages. Try again.</CommandEmpty>

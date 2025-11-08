@@ -2,26 +2,23 @@
 
 import useSWR from "swr";
 import { getPackageData, type PackageData } from "@/actions/package/get";
-import { useTimeRange } from "@/providers/filters";
+import { usePackages, useTimeRange } from "@/providers/filters";
 import { ChartAreaInteractive } from "./chart";
 import { ChartLoading } from "./chart-loading";
 import { EmptyState } from "./empty-state";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
-type MainProps = {
-  packageName?: string;
-};
-
-export const Main = ({ packageName }: MainProps) => {
+export const Main = () => {
   const [timeRange] = useTimeRange();
+  const [packages] = usePackages();
 
-  const { data: packageData, error } = useSWR<PackageData>(
-    packageName ? [packageName, timeRange] : null,
-    ([pkg, range]: [string, string]) =>
-      getPackageData(pkg as string, range as string)
+  const { data: packageData, error } = useSWR<PackageData[]>(
+    packages.length > 0 ? [packages, timeRange] : null,
+    async ([pkgs, range]: [string[], string]) =>
+      Promise.all(pkgs.map((pkg) => getPackageData(pkg, range)))
   );
 
-  if (!packageName) {
+  if (packages.length === 0) {
     return (
       <main className="overflow-hidden">
         <EmptyState />
