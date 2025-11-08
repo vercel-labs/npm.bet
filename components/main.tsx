@@ -1,36 +1,33 @@
-import type { Packument } from "@npm/types";
-import { notFound } from "next/navigation";
+"use client";
+
+import { useAtomValue } from "jotai";
+import useSWR from "swr";
+import { timeRangeAtom } from "@/providers/filters";
 import { ChartAreaInteractive } from "./chart";
+import { EmptyState } from "./empty-state";
 
 type MainProps = {
   packageName?: string;
 };
 
-export const Main = async ({ packageName }: MainProps) => {
-  if (!packageName) {
-    return (
-      <main className="overflow-hidden">
-        <ChartAreaInteractive data={{} as Packument} />
-      </main>
-    );
-  }
-
-  const response = await fetch(
-    `https://api.npmjs.org/downloads/range/last-year/${packageName}`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  console.log(response, "resp");
+const fetcher = async (url: string) => {
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
-    notFound();
+    throw new Error("Failed to fetch package data");
   }
 
-  const packageData = (await response.json()) as {
+  return response.json();
+};
+
+export const Main = ({ packageName }: MainProps) => {
+  const timeRange = useAtomValue(timeRangeAtom);
+
+  const { data: packageData, error } = useSWR<{
     start: string;
     end: string;
     package: string;
@@ -38,7 +35,36 @@ export const Main = async ({ packageName }: MainProps) => {
       downloads: number;
       day: string;
     }[];
-  };
+  }>(
+    packageName
+      ? `https://api.npmjs.org/downloads/range/${timeRange}/${packageName}`
+      : null,
+    fetcher
+  );
+
+  if (!packageName) {
+    return (
+      <main className="overflow-hidden">
+        <EmptyState />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="overflow-hidden">
+        <div>Error loading package data</div>
+      </main>
+    );
+  }
+
+  if (!packageData) {
+    return (
+      <main className="overflow-hidden">
+        <div>Loading...</div>
+      </main>
+    );
+  }
 
   return (
     <main className="overflow-hidden">

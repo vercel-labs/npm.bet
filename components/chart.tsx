@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useAtomValue } from "jotai";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -11,6 +11,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { groupingAtom } from "@/providers/filters";
 
 export const description = "An interactive area chart";
 
@@ -34,32 +35,64 @@ type ChartAreaInteractiveProps = {
 };
 
 export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
-  const [timeRange, setTimeRange] = useState("90d");
+  const grouping = useAtomValue(groupingAtom);
 
-  const chartData = data.downloads.map((item) => ({
-    date: item.day,
-    downloads: item.downloads,
-  }));
+  const getWeekStart = (date: Date): string => {
+    const day = date.getDay();
+    const diff = date.getDate() - day;
+    const weekStart = new Date(date);
+    weekStart.setDate(diff);
+    return weekStart.toISOString().split("T")[0];
+  };
 
-  const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date);
-    const endDate = new Date(data.end);
-    let daysToSubtract = 90;
-    if (timeRange === "30d") {
-      daysToSubtract = 30;
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7;
+  const getMonthStart = (date: Date): string => {
+    const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+    return monthStart.toISOString().split("T")[0];
+  };
+
+  const groupData = (
+    downloads: { downloads: number; day: string }[],
+    groupBy: string
+  ): { date: string; downloads: number }[] => {
+    if (groupBy === "day") {
+      return downloads.map((item) => ({
+        date: item.day,
+        downloads: item.downloads,
+      }));
     }
-    const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - daysToSubtract);
-    return date >= startDate;
-  });
+
+    const getGroupKey = (date: Date): string => {
+      if (groupBy === "week") {
+        return getWeekStart(date);
+      }
+      return getMonthStart(date);
+    };
+
+    const grouped = downloads.reduce(
+      (acc, item) => {
+        const groupKey = getGroupKey(new Date(item.day));
+        if (!acc[groupKey]) {
+          acc[groupKey] = 0;
+        }
+        acc[groupKey] += item.downloads;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    return Object.entries(grouped).map(([date, downloads]) => ({
+      date,
+      downloads,
+    }));
+  };
+
+  const chartData = groupData(data.downloads, grouping);
 
   return (
     <Card className="size-full shadow-none">
       <CardContent className="size-full">
         <ChartContainer className="size-full" config={chartConfig}>
-          <AreaChart data={filteredData}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="fillDownloads" x1="0" x2="0" y1="0" y2="1">
                 <stop
