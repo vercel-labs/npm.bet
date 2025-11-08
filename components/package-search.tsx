@@ -43,7 +43,14 @@ export const PackageSearch = () => {
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Backspace" && value === "" && packages.length > 0) {
+    if (event.key === "Enter" && value.trim() !== "") {
+      event.preventDefault();
+      handleSelect(value.trim());
+    } else if (
+      event.key === "Backspace" &&
+      value === "" &&
+      packages.length > 0
+    ) {
       event.preventDefault();
       const newPackages = [...packages];
       newPackages.pop();
