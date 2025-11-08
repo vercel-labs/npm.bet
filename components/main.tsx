@@ -4,7 +4,9 @@ import useSWR from "swr";
 import { getPackageData, type PackageData } from "@/actions/package/get";
 import { useTimeRange } from "@/providers/filters";
 import { ChartAreaInteractive } from "./chart";
+import { ChartLoading } from "./chart-loading";
 import { EmptyState } from "./empty-state";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 type MainProps = {
   packageName?: string;
@@ -29,8 +31,14 @@ export const Main = ({ packageName }: MainProps) => {
 
   if (error) {
     return (
-      <main className="overflow-hidden">
-        <div>Error loading package data</div>
+      <main className="flex size-full items-center justify-center overflow-hidden">
+        <Alert
+          className="max-w-md border-destructive bg-destructive/5"
+          variant="destructive"
+        >
+          <AlertTitle>Error loading package data</AlertTitle>
+          <AlertDescription>Please try again later.</AlertDescription>
+        </Alert>
       </main>
     );
   }
@@ -38,7 +46,7 @@ export const Main = ({ packageName }: MainProps) => {
   if (!packageData) {
     return (
       <main className="overflow-hidden">
-        <div>Loading...</div>
+        <ChartLoading />
       </main>
     );
   }
