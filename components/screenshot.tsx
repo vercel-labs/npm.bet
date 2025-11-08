@@ -61,7 +61,7 @@ export function Screenshot({ data }: ScreenshotProps) {
           <span className="sr-only">Download chart screenshot</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full sm:max-w-6xl">
+      <DialogContent className="w-full sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Download Chart</DialogTitle>
         </DialogHeader>
