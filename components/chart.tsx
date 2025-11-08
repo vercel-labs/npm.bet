@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/chart";
 import { useGrouping } from "@/providers/filters";
 
-export const description = "An interactive area chart";
+export const description = "An interactive line chart";
 
 const colors = [
   "var(--chart-1)",
@@ -125,30 +125,7 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
     <Card className="size-full shadow-none">
       <CardContent className="size-full">
         <ChartContainer className="size-full" config={chartConfig}>
-          <AreaChart data={chartData}>
-            <defs>
-              {data.map((pkg, index) => (
-                <linearGradient
-                  id={`fill-${pkg.package}`}
-                  key={pkg.package}
-                  x1="0"
-                  x2="0"
-                  y1="0"
-                  y2="1"
-                >
-                  <stop
-                    offset="5%"
-                    stopColor={colors[index % colors.length]}
-                    stopOpacity={0.8}
-                  />
-                  <stop
-                    offset="95%"
-                    stopColor={colors[index % colors.length]}
-                    stopOpacity={0.1}
-                  />
-                </linearGradient>
-              ))}
-            </defs>
+          <LineChart data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
               axisLine={false}
@@ -160,6 +137,20 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
                   month: "short",
                   day: "numeric",
                 });
+              }}
+              tickLine={false}
+              tickMargin={8}
+            />
+            <YAxis
+              axisLine={false}
+              tickFormatter={(value) => {
+                if (value >= 1_000_000) {
+                  return `${(value / 1_000_000).toFixed(1)}M`;
+                }
+                if (value >= 1000) {
+                  return `${(value / 1000).toFixed(0)}K`;
+                }
+                return value.toString();
               }}
               tickLine={false}
               tickMargin={8}
@@ -179,17 +170,17 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
               cursor={false}
             />
             {data.map((pkg, index) => (
-              <Area
+              <Line
                 dataKey={pkg.package}
-                fill={`url(#fill-${pkg.package})`}
+                dot={false}
                 key={pkg.package}
-                stackId="a"
                 stroke={colors[index % colors.length]}
+                strokeWidth={2}
                 type="natural"
               />
             ))}
             <ChartLegend content={<ChartLegendContent />} />
-          </AreaChart>
+          </LineChart>
         </ChartContainer>
       </CardContent>
     </Card>
