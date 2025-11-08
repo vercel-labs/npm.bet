@@ -97,7 +97,7 @@ export const TimeRangeSelector = () => {
           className="w-64 text-left font-normal shadow-none"
           variant="outline"
         >
-          <CalendarIcon />
+          <CalendarIcon className="size-4 text-muted-foreground" />
           <span className="flex-1 truncate text-sm">{displayText}</span>
         </Button>
       </PopoverTrigger>
