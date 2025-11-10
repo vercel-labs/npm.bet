@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.4.1",
     "@hookform/resolvers": "^5.2.2",
     "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.1",
