@@ -14,6 +14,7 @@ import { GitHub } from "./github";
 import { GroupingSelector } from "./grouping-selector";
 import { Logo } from "./logo";
 import { Screenshot } from "./screenshot";
+import { ThemeToggle } from "./theme-toggle";
 import { TimeRangeSelector } from "./time-range-selector";
 import { Button } from "./ui/button";
 
@@ -54,6 +55,7 @@ export const Header = ({ data }: HeaderProps) => (
       </Drawer>
 
       <Screenshot className="hidden sm:flex" data={data} />
+      <ThemeToggle />
       <GitHub />
     </div>
   </header>

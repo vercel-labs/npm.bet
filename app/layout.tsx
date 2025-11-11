@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type ReactNode, Suspense } from "react";
 import { cn } from "@/lib/utils";
@@ -57,12 +58,14 @@ type RootLayoutProps = {
 };
 
 const RootLayout = ({ children }: RootLayoutProps) => (
-  <html lang="en">
+  <html lang="en" suppressHydrationWarning>
     <body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
-      <NuqsAdapter>
-        <Suspense>{children}</Suspense>
-      </NuqsAdapter>
-      <Analytics />
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <NuqsAdapter>
+          <Suspense>{children}</Suspense>
+        </NuqsAdapter>
+        <Analytics />
+      </ThemeProvider>
     </body>
   </html>
 );
