@@ -39,6 +39,14 @@ const examples = [
     label: "Jest vs Mocha vs Vitest",
     packages: ["jest", "mocha", "vitest"],
   },
+  {
+    label: "Prisma vs Drizzle",
+    packages: ["prisma", "drizzle-orm"],
+  },
+  {
+    label: "Radix UI vs Base UI",
+    packages: ["radix-ui", "@base-ui-components/react"],
+  },
 ];
 
 export const EmptyState = () => {
@@ -55,26 +63,26 @@ export const EmptyState = () => {
           You haven&apos;t selected any packages yet. Get started by selecting a
           package or try one of the examples below.
         </EmptyDescription>
-        <EmptyContent className="mt-4">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {examples.map((example) => (
-              <button
-                key={example.label}
-                onClick={() => setPackages(example.packages)}
-                type="button"
-              >
-                <Badge
-                  className="cursor-pointer hover:bg-sidebar"
-                  key={example.label}
-                  variant="secondary"
-                >
-                  {example.label}
-                </Badge>
-              </button>
-            ))}
-          </div>
-        </EmptyContent>
       </EmptyHeader>
+      <EmptyContent className="max-w-lg">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {examples.map((example) => (
+            <button
+              key={example.label}
+              onClick={() => setPackages(example.packages)}
+              type="button"
+            >
+              <Badge
+                className="cursor-pointer hover:bg-sidebar"
+                key={example.label}
+                variant="secondary"
+              >
+                {example.label}
+              </Badge>
+            </button>
+          ))}
+        </div>
+      </EmptyContent>
     </Empty>
   );
 };
