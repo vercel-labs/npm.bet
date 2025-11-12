@@ -23,7 +23,7 @@ export const PackageSearch = () => {
   const [value, setValue] = useState("");
   const [packages, setPackages] = usePackages();
   const { data, error } = useSWR<NpmSearchResponse>(
-    value ? value : null,
+    value ? value.toLowerCase() : null,
     searchPackages,
     {
       keepPreviousData: true,
@@ -108,6 +108,7 @@ export const PackageSearch = () => {
             </Badge>
           ))}
           <CommandPrimitive.Input
+            autoCapitalize="off"
             className={cn(
               "flex flex-1 rounded-md bg-transparent py-2 text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
             )}
