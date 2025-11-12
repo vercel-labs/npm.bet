@@ -2,7 +2,7 @@
 
 import { Command as CommandPrimitive } from "cmdk";
 import { PackageSearchIcon, XIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import {
   type NpmSearchResponse,
@@ -19,11 +19,25 @@ import {
   CommandList,
 } from "./ui/command";
 
+const DEBOUNCE_MS = 200;
+
 export const PackageSearch = () => {
   const [value, setValue] = useState("");
+  const [debouncedValue, setDebouncedValue] = useState("");
   const [packages, setPackages] = usePackages();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value]);
+
   const { data, error } = useSWR<NpmSearchResponse>(
-    value ? value.toLowerCase() : null,
+    debouncedValue ? debouncedValue.toLowerCase() : null,
     searchPackages,
     {
       keepPreviousData: true,
@@ -58,7 +72,7 @@ export const PackageSearch = () => {
     }
   };
 
-  const shouldShowResults = value.trim().length > 0;
+  const shouldShowResults = debouncedValue.trim().length > 0;
 
   return (
     <div className="-translate-x-1/2 absolute bottom-4 left-1/2 w-full max-w-xs md:max-w-md">
