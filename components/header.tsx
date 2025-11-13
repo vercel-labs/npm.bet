@@ -10,6 +10,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { EmbedDialog } from "./embed-dialog";
 import { GitHub } from "./github";
 import { GroupingSelector } from "./grouping-selector";
 import { Logo } from "./logo";
@@ -58,6 +59,7 @@ export const Header = ({ data }: HeaderProps) => (
         </DrawerContent>
       </Drawer>
 
+      <EmbedDialog />
       <Screenshot className="hidden sm:flex" data={data} />
       <ThemeToggle />
       <GitHub />
