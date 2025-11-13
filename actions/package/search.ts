@@ -4,6 +4,7 @@ import { Redis } from "@upstash/redis";
 import { after } from "next/server";
 
 const redis = Redis.fromEnv();
+const isDevelopment = process.env.NODE_ENV === "development";
 
 export type NpmPackage = {
   package: {
@@ -31,10 +32,12 @@ export const searchPackages = async (
 ): Promise<NpmSearchResponse> => {
   const cacheKey = `search:${query.toLowerCase()}`;
 
-  // Try to get from cache first
-  const cached = await redis.get<NpmSearchResponse>(cacheKey);
-  if (cached) {
-    return cached;
+  // Try to get from cache first (skip in development)
+  if (!isDevelopment) {
+    const cached = await redis.get<NpmSearchResponse>(cacheKey);
+    if (cached) {
+      return cached;
+    }
   }
 
   // Cache miss - fetch from npm registry
@@ -53,10 +56,12 @@ export const searchPackages = async (
 
   const data: NpmSearchResponse = await response.json();
 
-  // Store in cache with TTL (async, after response)
-  after(() => {
-    redis.setex(cacheKey, CACHE_TTL_SECONDS, data);
-  });
+  // Store in cache with TTL (async, after response, skip in development)
+  if (!isDevelopment) {
+    after(() => {
+      redis.setex(cacheKey, CACHE_TTL_SECONDS, data);
+    });
+  }
 
   return data;
 };
