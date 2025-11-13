@@ -143,7 +143,12 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
               dataKey="date"
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value);
+                const [year, month, day] = value.split("-");
+                const date = new Date(
+                  Number(year),
+                  Number(month) - 1,
+                  Number(day)
+                );
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -175,8 +180,16 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
                     if (!payload?.[0]?.payload) {
                       return value;
                     }
-                    const startDate = new Date(value);
-                    const endDate = new Date(payload[0].payload.dateEnd);
+                    const parseDate = (dateStr: string) => {
+                      const [year, month, day] = dateStr.split("-");
+                      return new Date(
+                        Number(year),
+                        Number(month) - 1,
+                        Number(day)
+                      );
+                    };
+                    const startDate = parseDate(value);
+                    const endDate = parseDate(payload[0].payload.dateEnd);
                     const formatDate = (date: Date) =>
                       date.toLocaleDateString("en-US", {
                         month: "short",
