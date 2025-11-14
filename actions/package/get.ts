@@ -4,6 +4,7 @@ import { Redis } from "@upstash/redis";
 import { after } from "next/server";
 
 const redis = Redis.fromEnv();
+const isDevelopment = process.env.NODE_ENV === "development";
 
 export type PackageData = {
   start: string;
@@ -73,10 +74,12 @@ export const getPackageData = async (
   const apiTimeRange = convertTimeRangeToAPIFormat(timeRange);
   const cacheKey = `package:${packageName}:${apiTimeRange}`;
 
-  // Try to get from cache first
-  const cached = await redis.get<PackageData>(cacheKey);
-  if (cached) {
-    return cached;
+  // Try to get from cache first (skip in development)
+  if (!isDevelopment) {
+    const cached = await redis.get<PackageData>(cacheKey);
+    if (cached) {
+      return cached;
+    }
   }
 
   // Cache miss - fetch from npm API
@@ -95,10 +98,12 @@ export const getPackageData = async (
 
   const data: PackageData = await response.json();
 
-  // Store in cache with TTL (async, after response)
-  after(() => {
-    redis.setex(cacheKey, CACHE_TTL_SECONDS, data);
-  });
+  // Store in cache with TTL (async, after response, skip in development)
+  if (!isDevelopment) {
+    after(() => {
+      redis.setex(cacheKey, CACHE_TTL_SECONDS, data);
+    });
+  }
 
   return data;
 };

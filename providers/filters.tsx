@@ -1,3 +1,5 @@
+"use client";
+
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 
 export const useTimeRange = () =>

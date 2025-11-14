@@ -1,8 +1,9 @@
 "use client";
 
 import { toPng } from "html-to-image";
-import { DownloadIcon } from "lucide-react";
+import { CheckIcon, CopyIcon as CopyIconRaw, DownloadIcon } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import type { PackageData } from "@/actions/package/get";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,39 @@ export function Screenshot({ data, className }: ScreenshotProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
   const [backgroundColor, setBackgroundColor] = useState(colors[0]);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!chartRef.current) {
+      return;
+    }
+
+    try {
+      const dataUrl = await toPng(chartRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const blob = await fetch(dataUrl).then((res) => res.blob());
+      const clipboardItem = new ClipboardItem({
+        "image/png": blob,
+      });
+
+      await navigator.clipboard.write([clipboardItem]);
+
+      setIsCopied(true);
+
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to copy to clipboard";
+      setIsCopied(false);
+      toast.error(message);
+    }
+  };
+
+  const CopyIcon = isCopied ? CheckIcon : CopyIconRaw;
 
   const handleDownload = async () => {
     if (!chartRef.current) {
@@ -100,7 +134,7 @@ export function Screenshot({ data, className }: ScreenshotProps) {
               {colors.map((color) => (
                 <Button
                   className={cn(
-                    "overflow-hidden rounded-full p-0 shadow-none",
+                    "size-6 overflow-hidden rounded-full p-0 shadow-none",
                     color === backgroundColor && "ring-2 ring-ring"
                   )}
                   key={color}
@@ -115,14 +149,24 @@ export function Screenshot({ data, className }: ScreenshotProps) {
                 </Button>
               ))}
             </div>
-            <Button
-              disabled={isDownloading}
-              onClick={handleDownload}
-              variant="default"
-            >
-              <DownloadIcon />
-              {isDownloading ? "Downloading..." : "Download PNG"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={isCopied}
+                onClick={handleCopy}
+                variant="outline"
+              >
+                <CopyIcon />
+                {isCopied ? "Copied!" : "Copy to clipboard"}
+              </Button>
+              <Button
+                disabled={isDownloading}
+                onClick={handleDownload}
+                variant="default"
+              >
+                <DownloadIcon />
+                {isDownloading ? "Downloading..." : "Download PNG"}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

@@ -1,14 +1,6 @@
 "use client";
 
-import { TZDate } from "@date-fns/tz";
-import {
-  isSameMonth,
-  isSameWeek,
-  isToday,
-  parseISO,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
+import { startOfMonth, startOfWeek } from "date-fns";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,35 +112,6 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
 
     const sortedDates = Array.from(allDates).sort();
 
-    // Remove the most recent data point to avoid showing incomplete periods
-    // For weekly/monthly grouping, we need to check if the current period is complete
-    if (sortedDates.length > 1) {
-      const lastDateString = sortedDates.at(-1);
-
-      if (!lastDateString) {
-        return sortedDates;
-      }
-
-      const lastDate = parseISO(lastDateString);
-      const now = new TZDate(new Date(), "UTC");
-      let shouldRemove = false;
-
-      if (grouping === "day") {
-        // For daily grouping, check if it's today
-        shouldRemove = isToday(lastDate);
-      } else if (grouping === "week") {
-        // For weekly grouping, check if we're in the same week
-        shouldRemove = isSameWeek(lastDate, now, { weekStartsOn: 0 });
-      } else if (grouping === "month") {
-        // For monthly grouping, check if we're in the same month
-        shouldRemove = isSameMonth(lastDate, now);
-      }
-
-      if (shouldRemove) {
-        sortedDates.pop();
-      }
-    }
-
     return sortedDates.map((date) => ({
       date,
       dateEnd: grouping === "day" ? date : getDateRangeEnd(date),
@@ -180,7 +143,12 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
               dataKey="date"
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value);
+                const [year, month, day] = value.split("-");
+                const date = new Date(
+                  Number(year),
+                  Number(month) - 1,
+                  Number(day)
+                );
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -212,8 +180,16 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
                     if (!payload?.[0]?.payload) {
                       return value;
                     }
-                    const startDate = new Date(value);
-                    const endDate = new Date(payload[0].payload.dateEnd);
+                    const parseDate = (dateStr: string) => {
+                      const [year, month, day] = dateStr.split("-");
+                      return new Date(
+                        Number(year),
+                        Number(month) - 1,
+                        Number(day)
+                      );
+                    };
+                    const startDate = parseDate(value);
+                    const endDate = parseDate(payload[0].payload.dateEnd);
                     const formatDate = (date: Date) =>
                       date.toLocaleDateString("en-US", {
                         month: "short",
