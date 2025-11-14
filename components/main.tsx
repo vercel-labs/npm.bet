@@ -20,8 +20,10 @@ export const Main = () => {
   );
 
   useEffect(() => {
-    document.title =
-      packages.length > 0 ? `${packages.join(" vs ")} | npm.bet` : "npm.bet";
+    if (typeof window !== "undefined") {
+      document.title =
+        packages.length > 0 ? `${packages.join(" vs ")} | npm.bet` : "npm.bet";
+    }
   }, [packages]);
 
   if (packages.length === 0) {
