@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import useSWR from "swr";
 import { getPackageData, type PackageData } from "@/actions/package/get";
-import { usePackages, useTimeRange } from "@/providers/filters";
+import { useGrouping, usePackages, useTimeRange } from "@/providers/filters";
 import { ChartAreaInteractive } from "./chart";
 import { ChartLoading } from "./chart-loading";
 import { EmptyState } from "./empty-state";
@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 export const Main = () => {
   const [timeRange] = useTimeRange();
   const [packages] = usePackages();
+  const [grouping] = useGrouping();
 
   const { data: packageData, error } = useSWR<PackageData[]>(
     packages.length > 0 ? [packages, timeRange] : null,
@@ -20,11 +21,25 @@ export const Main = () => {
   );
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.title =
-        packages.length > 0 ? `${packages.join(" vs ")} | npm.bet` : "npm.bet";
+    if (typeof window === "undefined") {
+      return;
     }
-  }, [packages]);
+
+    if (packages.length > 0) {
+      document.title = `${packages.join(" vs ")} | npm.bet`;
+      document
+        .querySelector("meta[property='og:image']")
+        ?.setAttribute(
+          "content",
+          `${window.location.origin}/og?q=${packages.join(",")}&timeRange=${timeRange}&grouping=${grouping}`
+        );
+    } else {
+      document.title = "npm.bet";
+      document
+        .querySelector("meta[property='og:image']")
+        ?.setAttribute("content", `${window.location.origin}/og`);
+    }
+  }, [packages, timeRange, grouping]);
 
   if (packages.length === 0) {
     return (
