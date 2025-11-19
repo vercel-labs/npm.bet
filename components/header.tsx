@@ -17,10 +17,13 @@ import { usePackages, useTimeRange } from "@/providers/filters";
 import { GitHub } from "./github";
 import { GroupingSelector } from "./grouping-selector";
 import { Logo } from "./logo";
+import { RemoveCurrentPeriod } from "./remove-current-period";
 import { Screenshot } from "./screenshot";
+import { Settings } from "./settings";
 import { ThemeToggle } from "./theme-toggle";
 import { TimeRangeSelector } from "./time-range-selector";
 import { Button } from "./ui/button";
+import { ButtonGroup } from "./ui/button-group";
 
 export const Header = () => {
   const [packages] = usePackages();
@@ -39,37 +42,41 @@ export const Header = () => {
         <TimeRangeSelector className="hidden sm:flex" />
         <GroupingSelector className="hidden sm:flex" />
 
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button
-              className="shadow-none sm:hidden"
-              size="icon"
-              variant="outline"
-            >
-              <SettingsIcon />
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <div className="mx-auto w-full max-w-sm">
-              <DrawerHeader>
-                <DrawerTitle>Settings</DrawerTitle>
-                <DrawerDescription>Customize your chart.</DrawerDescription>
-              </DrawerHeader>
-              <div className="space-y-2 p-4 pb-0">
-                <TimeRangeSelector className="w-full" />
-                <GroupingSelector className="w-full" />
+        <ButtonGroup className="sm:hidden">
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button className="shadow-none" size="icon" variant="outline">
+                <SettingsIcon />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <div className="mx-auto w-full max-w-sm">
+                <DrawerHeader>
+                  <DrawerTitle>Settings</DrawerTitle>
+                  <DrawerDescription>Customize your chart.</DrawerDescription>
+                </DrawerHeader>
+                <div className="space-y-2 p-4 pb-0">
+                  <TimeRangeSelector className="w-full" />
+                  <GroupingSelector className="w-full" />
+                  <RemoveCurrentPeriod />
+                </div>
+                <DrawerFooter>
+                  <DrawerClose asChild>
+                    <Button variant="outline">Close</Button>
+                  </DrawerClose>
+                </DrawerFooter>
               </div>
-              <DrawerFooter>
-                <DrawerClose asChild>
-                  <Button variant="outline">Close</Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </div>
-          </DrawerContent>
-        </Drawer>
+            </DrawerContent>
+          </Drawer>
+          <ThemeToggle />
+        </ButtonGroup>
 
-        <Screenshot className="hidden sm:flex" data={data} />
-        <ThemeToggle />
+        <ButtonGroup className="hidden sm:flex">
+          <Settings />
+          <Screenshot data={data} />
+          <ThemeToggle />
+        </ButtonGroup>
+
         <GitHub />
       </div>
     </header>

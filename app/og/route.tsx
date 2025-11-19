@@ -1,4 +1,12 @@
-import { startOfMonth, startOfWeek } from "date-fns";
+import { TZDate } from "@date-fns/tz";
+import {
+  isSameMonth,
+  isSameWeek,
+  isToday,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 import { getPackageData } from "@/actions/package/get";
@@ -119,6 +127,38 @@ const groupData = (
   }));
 };
 
+const removeCurrentPeriodFromData = (
+  data: { date: string; downloads: number }[],
+  grouping: string
+): { date: string; downloads: number }[] => {
+  if (data.length <= 1) {
+    return data;
+  }
+
+  const lastDateString = data.at(-1)?.date;
+  if (!lastDateString) {
+    return data;
+  }
+
+  const lastDate = parseISO(lastDateString);
+  const now = new TZDate(new Date(), "UTC");
+  let shouldRemove = false;
+
+  if (grouping === "day") {
+    shouldRemove = isToday(lastDate);
+  } else if (grouping === "week") {
+    shouldRemove = isSameWeek(lastDate, now, { weekStartsOn: 0 });
+  } else if (grouping === "month") {
+    shouldRemove = isSameMonth(lastDate, now);
+  }
+
+  if (shouldRemove) {
+    return data.slice(0, -1);
+  }
+
+  return data;
+};
+
 export const GET = async (request: NextRequest) => {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("q");
@@ -182,6 +222,8 @@ export const GET = async (request: NextRequest) => {
   const packages = query.split(",").slice(0, 5); // Limit to 5 packages
   const timeRange = searchParams.get("timeRange") ?? "last-year";
   const grouping = searchParams.get("grouping") ?? "week";
+  const removeCurrentPeriod =
+    searchParams.get("removeCurrentPeriod") !== "false";
 
   try {
     // Fetch data for all packages
@@ -190,10 +232,16 @@ export const GET = async (request: NextRequest) => {
     );
 
     // Apply grouping to each package's data
-    const groupedPackageData = packageDataArray.map((pkg) => ({
-      ...pkg,
-      downloads: groupData(pkg.downloads, grouping),
-    }));
+    const groupedPackageData = packageDataArray.map((pkg) => {
+      const grouped = groupData(pkg.downloads, grouping);
+      const processed = removeCurrentPeriod
+        ? removeCurrentPeriodFromData(grouped, grouping)
+        : grouped;
+      return {
+        ...pkg,
+        downloads: processed,
+      };
+    });
 
     // Find the maximum downloads value across all packages after grouping
     const maxDownloads = Math.max(

@@ -19,7 +19,6 @@ import { Logo } from "./logo";
 
 type ScreenshotProps = {
   data?: PackageData[];
-  className?: string;
 };
 
 const colors = [
@@ -31,7 +30,7 @@ const colors = [
   "var(--color-chart-5)",
 ];
 
-export function Screenshot({ data, className }: ScreenshotProps) {
+export const Screenshot = ({ data }: ScreenshotProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -98,7 +97,7 @@ export function Screenshot({ data, className }: ScreenshotProps) {
     <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogTrigger asChild>
         <Button
-          className={cn("shadow-none", className)}
+          className="shadow-none"
           disabled={!data || data.length === 0}
           size="icon"
           variant="outline"
@@ -172,4 +171,4 @@ export function Screenshot({ data, className }: ScreenshotProps) {
       </DialogContent>
     </Dialog>
   );
-}
+};
