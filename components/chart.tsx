@@ -19,7 +19,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useGrouping } from "@/providers/filters";
+import { useGrouping, useRemoveCurrentPeriod } from "@/providers/filters";
 
 export const description = "An interactive line chart";
 
@@ -45,6 +45,7 @@ type ChartAreaInteractiveProps = {
 
 export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
   const [grouping] = useGrouping();
+  const [removeCurrentPeriod] = useRemoveCurrentPeriod();
 
   const getWeekStart = (date: Date): string => {
     const weekStart = startOfWeek(date, { weekStartsOn: 0 });
@@ -122,7 +123,7 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
 
     // Remove the most recent data point to avoid showing incomplete periods
     // For weekly/monthly grouping, we need to check if the current period is complete
-    if (sortedDates.length > 1) {
+    if (removeCurrentPeriod && sortedDates.length > 1) {
       const lastDateString = sortedDates.at(-1);
 
       if (!lastDateString) {
