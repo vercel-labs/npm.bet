@@ -1,6 +1,14 @@
 "use client";
 
-import { startOfMonth, startOfWeek } from "date-fns";
+import { TZDate } from "@date-fns/tz";
+import {
+  isSameMonth,
+  isSameWeek,
+  isToday,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -111,6 +119,35 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
     }
 
     const sortedDates = Array.from(allDates).sort();
+
+    // Remove the most recent data point to avoid showing incomplete periods
+    // For weekly/monthly grouping, we need to check if the current period is complete
+    if (sortedDates.length > 1) {
+      const lastDateString = sortedDates.at(-1);
+
+      if (!lastDateString) {
+        return sortedDates;
+      }
+
+      const lastDate = parseISO(lastDateString);
+      const now = new TZDate(new Date(), "UTC");
+      let shouldRemove = false;
+
+      if (grouping === "day") {
+        // For daily grouping, check if it's today
+        shouldRemove = isToday(lastDate);
+      } else if (grouping === "week") {
+        // For weekly grouping, check if we're in the same week
+        shouldRemove = isSameWeek(lastDate, now, { weekStartsOn: 0 });
+      } else if (grouping === "month") {
+        // For monthly grouping, check if we're in the same month
+        shouldRemove = isSameMonth(lastDate, now);
+      }
+
+      if (shouldRemove) {
+        sortedDates.pop();
+      }
+    }
 
     return sortedDates.map((date) => ({
       date,
