@@ -1489,8 +1489,8 @@ packages:
     resolution: {integrity: sha512-FJhYRoDaiatfEkUK8HKlicmu/3SGFD51q3itKDGoSTysQJBnfOcxU5GxnhE1E6soB76MbT0MBtnKJuXyAx+96Q==}
     engines: {node: '>=6'}
 
-  glob@11.0.3:
-    resolution: {integrity: sha512-2Nim7dha1KVkaiF4q6Dj+ngPPMdfvLJEOpZk/jKiUAkqKebpGAWQXAq9z1xu9HKu5lWfqw/FASuccEjyznjPaA==}
+  glob@11.1.0:
+    resolution: {integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==}
     engines: {node: 20 || >=22}
     hasBin: true
 
@@ -3283,7 +3283,7 @@ snapshots:
 
   get-nonce@1.0.1: {}
 
-  glob@11.0.3:
+  glob@11.1.0:
     dependencies:
       foreground-child: 3.3.1
       jackspeak: 4.1.1
@@ -3736,7 +3736,7 @@ snapshots:
       '@clack/prompts': 0.11.0
       '@trpc/server': 11.7.1(typescript@5.9.3)
       deepmerge: 4.3.1
-      glob: 11.0.3
+      glob: 11.1.0
       jsonc-parser: 3.3.1
       nypm: 0.6.2
       trpc-cli: 0.12.0(@trpc/server@11.7.1(typescript@5.9.3))(zod@4.1.12)
