@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  addMonths,
+  addWeeks,
   isSameMonth,
   isSameWeek,
   isToday,
@@ -8,7 +10,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -42,72 +44,70 @@ type ChartAreaInteractiveProps = {
   }[];
 };
 
+const getDateRangeEnd = (startDate: string, grouping: string) => {
+  const date = new Date(startDate);
+
+  if (grouping === "week") {
+    return addWeeks(date, 1);
+  }
+
+  if (grouping === "month") {
+    return addMonths(date, 1);
+  }
+
+  return date;
+};
+
+const getWeekStart = (date: Date) => {
+  const weekStart = startOfWeek(date, { weekStartsOn: 0 });
+
+  return weekStart.toISOString().split("T")[0];
+};
+
+const getMonthStart = (date: Date) => {
+  const monthStart = startOfMonth(date);
+
+  return monthStart.toISOString().split("T")[0];
+};
+
+const groupData = (
+  downloads: { downloads: number; day: string }[],
+  groupBy: string
+): { date: string; downloads: number }[] => {
+  if (groupBy === "day") {
+    return downloads.map((item) => ({
+      date: item.day,
+      downloads: item.downloads,
+    }));
+  }
+
+  const getGroupKey = (date: Date): string => {
+    if (groupBy === "week") {
+      return getWeekStart(date);
+    }
+    return getMonthStart(date);
+  };
+
+  const grouped = downloads.reduce(
+    (acc, item) => {
+      const groupKey = getGroupKey(new Date(item.day));
+      if (!acc[groupKey]) {
+        acc[groupKey] = 0;
+      }
+      acc[groupKey] += item.downloads;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  return Object.entries(grouped).map(([date, downloadCount]) => ({
+    date,
+    downloads: downloadCount,
+  }));
+};
+
 export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
   const [grouping] = useGrouping();
-  const removeCurrentPeriod = true;
-
-  const getWeekStart = useCallback((date: Date): string => {
-    const weekStart = startOfWeek(date, { weekStartsOn: 0 });
-    return weekStart.toISOString().split("T")[0];
-  }, []);
-
-  const getMonthStart = useCallback((date: Date): string => {
-    const monthStart = startOfMonth(date);
-    return monthStart.toISOString().split("T")[0];
-  }, []);
-
-  const groupData = useCallback(
-    (
-      downloads: { downloads: number; day: string }[],
-      groupBy: string
-    ): { date: string; downloads: number }[] => {
-      if (groupBy === "day") {
-        return downloads.map((item) => ({
-          date: item.day,
-          downloads: item.downloads,
-        }));
-      }
-
-      const getGroupKey = (date: Date): string => {
-        if (groupBy === "week") {
-          return getWeekStart(date);
-        }
-        return getMonthStart(date);
-      };
-
-      const grouped = downloads.reduce(
-        (acc, item) => {
-          const groupKey = getGroupKey(new Date(item.day));
-          if (!acc[groupKey]) {
-            acc[groupKey] = 0;
-          }
-          acc[groupKey] += item.downloads;
-          return acc;
-        },
-        {} as Record<string, number>
-      );
-
-      return Object.entries(grouped).map(([date, downloadCount]) => ({
-        date,
-        downloads: downloadCount,
-      }));
-    },
-    [getWeekStart, getMonthStart]
-  );
-
-  const getDateRangeEnd = useCallback(
-    (startDate: string): string => {
-      const date = new Date(startDate);
-      if (grouping === "week") {
-        date.setDate(date.getDate() + 6);
-      } else if (grouping === "month") {
-        date.setMonth(date.getMonth() + 1);
-        date.setDate(date.getDate() - 1);
-      }
-      return date.toISOString().split("T")[0];
-    },
-    [grouping]
-  );
 
   const chartData = useMemo(() => {
     const allDates = new Set<string>();
@@ -128,7 +128,7 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
 
     // Remove the most recent data point to avoid showing incomplete periods
     // For weekly/monthly grouping, we need to check if the current period is complete
-    if (removeCurrentPeriod && sortedDates.length > 1) {
+    if (sortedDates.length > 1) {
       const lastDateString = sortedDates.at(-1);
 
       if (!lastDateString) {
@@ -157,10 +157,10 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
 
     return sortedDates.map((date) => ({
       date,
-      dateEnd: grouping === "day" ? date : getDateRangeEnd(date),
+      dateEnd: getDateRangeEnd(date, grouping).toISOString().split("T")[0],
       ...packagesByDate[date],
     }));
-  }, [data, grouping, groupData, getDateRangeEnd]);
+  }, [data, grouping]);
 
   const chartConfig = data.reduce(
     (acc, pkg, index) => {
