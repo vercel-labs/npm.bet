@@ -73,21 +73,23 @@ export const PackageSearch = () => {
   };
 
   const shouldShowResults = debouncedValue.trim().length > 0;
+  const showEmptyState = data && data.objects.length === 0;
+  const showResults = data && data.objects.length > 0;
 
   return (
     <div className="-translate-x-1/2 absolute bottom-4 left-1/2 w-full max-w-xs md:max-w-md">
       <Command className="w-full rounded-lg border">
-        {shouldShowResults && (
+        {shouldShowResults ? (
           <CommandList>
-            {error && (
+            {error ? (
               <CommandEmpty>Failed to load packages. Try again.</CommandEmpty>
-            )}
-            {data && data.objects.length === 0 && (
+            ) : null}
+            {showEmptyState ? (
               <CommandEmpty className="flex items-center gap-2 p-4 text-muted-foreground text-sm">
                 <PackageSearchIcon className="size-3" /> No packages found.
               </CommandEmpty>
-            )}
-            {data && data.objects.length > 0 && (
+            ) : null}
+            {showResults ? (
               <CommandGroup>
                 {data.objects.map((item) => (
                   <CommandItem
@@ -104,9 +106,9 @@ export const PackageSearch = () => {
                   </CommandItem>
                 ))}
               </CommandGroup>
-            )}
+            ) : null}
           </CommandList>
-        )}
+        ) : null}
         <div className="flex items-center gap-2 overflow-x-auto px-3">
           <PackageSearchIcon className="size-4 shrink-0 opacity-50" />
           {packages.map((pkg) => (

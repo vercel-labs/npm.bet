@@ -109,6 +109,7 @@ const groupData = (
 export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
   const [grouping] = useGrouping();
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Chart data is complex to compute"
   const chartData = useMemo(() => {
     const allDates = new Set<string>();
     const packagesByDate: Record<string, Record<string, number>> = {};
