@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 export const GitHub = () => (
   <Button asChild className="shadow-none" size="icon" variant="outline">
     <a
-      href="https://github.com/haydenbleasel/npm.bet"
+      href="https://github.com/vercel/npm.bet"
       rel="noopener noreferrer"
       target="_blank"
     >

@@ -36,7 +36,7 @@ A beautiful, interactive npm package download statistics visualizer built with N
 
 ```bash
 # Clone the repository
-git clone https://github.com/haydenbleasel/npm.bet.git
+git clone https://github.com/vercel/npm.bet.git
 cd npm.bet
 
 # Install dependencies
@@ -126,4 +126,4 @@ This project is open source and available under the MIT License.
 
 ---
 
-Built with ❤️ by [Hayden Bleasel](https://github.com/haydenbleasel)
+Built with ❤️ by [Vercel](https://github.com/vercel)

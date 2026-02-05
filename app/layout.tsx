@@ -19,12 +19,10 @@ const geistMono = Geist_Mono({
 
 const title = "npm.bet";
 const description = "visualize and compare your npm package downloads.";
-const authors = [
-  { name: "Hayden Bleasel", url: "https://www.haydenbleasel.com" },
-];
-const creator = "Hayden Bleasel";
-const publisher = "Hayden Bleasel";
-const twitterHandle = "@haydenbleasel";
+const authors = [{ name: "Vercel", url: "https://vercel.com" }];
+const creator = "Vercel";
+const publisher = "Vercel";
+const twitterHandle = "@vercel";
 
 export const metadata: Metadata = {
   title,
