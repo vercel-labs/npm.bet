@@ -110,7 +110,7 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
   const [grouping] = useGrouping();
   const [metric, setMetric] = useMetric();
   const isShare = metric === "share" && data.length > 1;
-  const packageNames = data.map((pkg) => pkg.package);
+  const packageNames = useMemo(() => data.map((pkg) => pkg.package), [data]);
 
   useEffect(() => {
     if (metric === "share" && data.length <= 1) {
