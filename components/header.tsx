@@ -13,6 +13,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { EmbedDialog } from "./embed-dialog";
 import { usePackages, useTimeRange } from "@/providers/filters";
 import { GitHub } from "./github";
 import { GroupingSelector } from "./grouping-selector";
@@ -76,6 +77,9 @@ export const Header = () => {
           <ThemeToggle />
         </ButtonGroup>
 
+        <EmbedDialog />
+        <Screenshot className="hidden sm:flex" data={data} />
+        <ThemeToggle />
         <GitHub />
       </div>
     </header>
