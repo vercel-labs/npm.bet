@@ -198,7 +198,9 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
     if (!isShare || chartData.length === 0) return 100;
     const maxValue = Math.max(
       ...chartData.flatMap((row) =>
-        packageNames.map((name) => Number(row[name] ?? 0))
+        typeof row === "string"
+          ? [0]
+          : packageNames.map((name) => Number(row[name] ?? 0))
       )
     );
     return Math.min(100, Math.ceil((maxValue + 5) / 10) * 10);
