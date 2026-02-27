@@ -246,20 +246,28 @@ const generateSVGChart = (
 
       <!-- Brand Label with Logo -->
       <g transform="translate(${width / 2 - 32}, 12)">
-        <!-- Logo -->
-        <g transform="scale(0.6)">
-          <path d="M12 22v-9" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
-          <path d="M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
-          <path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
-          <path d="M21 12.43a1.93 1.93 0 0 0 0-3.36L8.83 2.2a1.64 1.64 0 0 0-1.63 0L3 4.57a1.93 1.93 0 0 0 0 3.36l12.18 6.86a1.636 1.636 0 0 0 1.63 0z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+        <g transform="scale(0.18) translate(-40, 4)">
+          <svg viewBox="0 0 76 65" width="76" height="65">
+            <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="#000"/>
+          </svg>
         </g>
-        <!-- Text -->
+        <text
+          x="12"
+          y="8"
+          font-family="Arial"
+          font-size="12"
+          fill="#737373"
+          opacity="0.5"
+          alignment-baseline="middle"
+        >
+          /
+        </text>
         <text
           x="20"
           y="8"
           font-family="Arial"
           font-size="12"
-          fill="#666"
+          fill="#000"
           alignment-baseline="middle"
         >
           npm.bet
