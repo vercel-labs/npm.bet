@@ -295,9 +295,20 @@ export const GET = async (request: NextRequest) => {
       ? computeShareData(groupedPackageData)
       : {};
 
-    // Find the maximum downloads value across all packages after grouping
+    // Find the maximum value across all packages after grouping
     const maxDownloads = isShare
-      ? 100
+      ? Math.min(
+          100,
+          Math.ceil(
+            (Math.max(
+              ...groupedPackageData.flatMap((pkg) =>
+                pkg.downloads.map((d) => d.downloads)
+              )
+            ) +
+              5) /
+              10
+          ) * 10
+        )
       : Math.max(
           ...groupedPackageData.flatMap((pkg) =>
             pkg.downloads.map((d) => d.downloads)

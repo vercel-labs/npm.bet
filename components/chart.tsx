@@ -194,6 +194,16 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
     });
   }, [data, grouping, isShare, packageNames]);
 
+  const shareYMax = useMemo(() => {
+    if (!isShare || chartData.length === 0) return 100;
+    const maxValue = Math.max(
+      ...chartData.flatMap((row) =>
+        packageNames.map((name) => Number(row[name] ?? 0))
+      )
+    );
+    return Math.min(100, Math.ceil((maxValue + 5) / 10) * 10);
+  }, [isShare, chartData, packageNames]);
+
   const chartConfig = data.reduce(
     (acc, pkg, index) => {
       acc[pkg.package] = {
@@ -232,7 +242,7 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
             />
             <YAxis
               axisLine={false}
-              domain={isShare ? [0, 100] : undefined}
+              domain={isShare ? [0, shareYMax] : undefined}
               tickFormatter={(value) => {
                 if (isShare) {
                   return `${value}%`;
