@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getPackageData, type PackageData } from "@/actions/package/get";
 import {
+  escapeXml,
   formatNumber,
   groupData,
   shouldRemoveIncompleteDate,
@@ -233,7 +234,7 @@ const generateSVGChart = (
         <g transform="translate(${padding.left}, ${legendStartY + i * legendItemHeight})">
           <line x1="0" y1="0" x2="20" y2="0" stroke="${colors[i % colors.length]}" stroke-width="2"/>
           <text x="25" y="0" font-family="Arial" font-size="12" fill="#333" alignment-baseline="middle">
-            ${pkg.package}
+            ${escapeXml(pkg.package)}
           </text>
         </g>
       `
@@ -334,8 +335,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Parse packages (support comma-separated list)
-    const packages = packagesParam.split(",").filter(Boolean);
+    // Parse packages (support comma-separated list, max 5)
+    const packages = packagesParam.split(",").filter(Boolean).slice(0, 5);
 
     // Fetch data for all packages
     const packageData = await Promise.all(

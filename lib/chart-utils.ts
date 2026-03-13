@@ -90,6 +90,17 @@ export const shouldRemoveIncompleteDate = (
 };
 
 /**
+ * Escape a string for safe interpolation into XML/SVG
+ */
+export const escapeXml = (str: string): string =>
+  str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
+/**
  * Format a number for display (e.g., 1000 -> 1K, 1000000 -> 1.0M)
  */
 export const formatNumber = (value: number): string => {

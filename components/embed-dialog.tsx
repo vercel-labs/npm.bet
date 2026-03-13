@@ -30,7 +30,7 @@ export const EmbedDialog = () => {
 
   const svgUrl = useMemo(() => {
     const baseUrl =
-      typeof window !== "undefined" ? `${window.location.origin}/svg` : "/svg";
+      typeof window === "undefined" ? "/svg" : `${window.location.origin}/svg`;
 
     const params = new URLSearchParams();
 

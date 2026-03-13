@@ -5,6 +5,8 @@ import { Button } from "./ui/button";
 export const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
 
+  const Icon = theme === "dark" ? SunIcon : MoonIcon;
+
   return (
     <Button
       className="shadow-none"
@@ -12,9 +14,7 @@ export const ThemeToggle = () => {
       size="icon"
       variant="outline"
     >
-      <MoonIcon className="hidden [html.dark_&]:block" />
-      <SunIcon className="hidden [html.light_&]:block" />
-      <span className="sr-only">Toggle Theme</span>
+      <Icon className="size-4" />
     </Button>
   );
 };
