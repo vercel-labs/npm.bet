@@ -9,6 +9,7 @@ A beautiful, interactive npm package download statistics visualizer built with N
 - **Smart grouping** - Aggregate data by day, week, or month for better insights
 - **Interactive charts** - Built with Recharts for smooth, responsive visualizations
 - **Screenshot export** - Download charts as high-resolution PNG images
+- **SVG embed** - Generate embeddable SVG charts with code snippets (Markdown, HTML, or direct URL) for your documentation
 - **Dark mode support** - Seamless theme switching with next-themes
 - **Real-time search** - Search and add npm packages with autocomplete
 - **Responsive design** - Works perfectly on desktop and mobile devices
@@ -62,6 +63,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 3. **Adjust grouping**: Switch between daily, weekly, or monthly aggregation
 4. **Compare packages**: Add multiple packages to compare their download trends
 5. **Export chart**: Click the camera icon to download the chart as a PNG
+6. **Embed SVG**: Click the code icon to get embeddable SVG snippets for your README or website
 
 ## Project Structure
 
