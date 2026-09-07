@@ -9,7 +9,6 @@ import {
   searchPackages,
 } from "@/actions/package/search";
 import { cn } from "@/lib/utils";
-import { usePackages } from "@/providers/filters";
 import { Badge } from "./ui/badge";
 import {
   Command,
@@ -21,10 +20,17 @@ import {
 
 const DEBOUNCE_MS = 200;
 
-export const PackageSearch = () => {
+interface PackageSearchProps {
+  onPackagesChange: (packages: string[]) => void;
+  packages: string[];
+}
+
+export const PackageSearch = ({
+  onPackagesChange,
+  packages,
+}: PackageSearchProps) => {
   const [value, setValue] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
-  const [packages, setPackages] = usePackages();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,13 +53,13 @@ export const PackageSearch = () => {
 
   const handleSelect = (packageName: string) => {
     if (!packages.includes(packageName)) {
-      setPackages([...packages, packageName]);
+      onPackagesChange([...packages, packageName]);
     }
     setValue("");
   };
 
   const handleRemove = (packageName: string) => {
-    setPackages(packages.filter((pkg) => pkg !== packageName));
+    onPackagesChange(packages.filter((pkg) => pkg !== packageName));
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -68,7 +74,7 @@ export const PackageSearch = () => {
       event.preventDefault();
       const newPackages = [...packages];
       newPackages.pop();
-      setPackages(newPackages);
+      onPackagesChange(newPackages);
     }
   };
 
@@ -79,42 +85,41 @@ export const PackageSearch = () => {
   return (
     <div className="absolute bottom-4 left-1/2 w-full max-w-xs -translate-x-1/2 md:max-w-md">
       <Command className="w-full rounded-lg border">
-        {shouldShowResults ? (
-          <CommandList>
-            {error ? (
-              <CommandEmpty>Failed to load packages. Try again.</CommandEmpty>
-            ) : null}
-            {showEmptyState ? (
-              <CommandEmpty className="flex items-center gap-2 p-4 text-muted-foreground text-sm">
-                <PackageSearchIcon className="size-3" /> No packages found.
-              </CommandEmpty>
-            ) : null}
-            {showResults ? (
-              <CommandGroup>
-                {data.objects.map((item) => (
-                  <CommandItem
-                    key={item.package.name}
-                    onSelect={() => handleSelect(item.package.name)}
-                    value={item.package.name}
-                  >
-                    <span className="shrink-0 truncate font-medium">
-                      {item.package.name}
-                    </span>
-                    <span className="truncate text-muted-foreground text-xs">
-                      {item.package.description}
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ) : null}
-          </CommandList>
-        ) : null}
+        <CommandList>
+          {shouldShowResults && error ? (
+            <CommandEmpty>Failed to load packages. Try again.</CommandEmpty>
+          ) : null}
+          {shouldShowResults && showEmptyState ? (
+            <CommandEmpty className="flex items-center gap-2 p-4 text-muted-foreground text-sm">
+              <PackageSearchIcon className="size-3" /> No packages found.
+            </CommandEmpty>
+          ) : null}
+          {shouldShowResults && showResults ? (
+            <CommandGroup>
+              {data.objects.map((item) => (
+                <CommandItem
+                  key={item.package.name}
+                  onSelect={() => handleSelect(item.package.name)}
+                  value={item.package.name}
+                >
+                  <span className="shrink-0 truncate font-medium">
+                    {item.package.name}
+                  </span>
+                  <span className="truncate text-muted-foreground text-xs">
+                    {item.package.description}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
+        </CommandList>
         <div className="flex items-center gap-2 overflow-x-auto px-3">
           <PackageSearchIcon className="size-4 shrink-0 opacity-50" />
           {packages.map((pkg) => (
             <Badge className="gap-1 pr-1 pl-2" key={pkg} variant="secondary">
               {pkg}
               <button
+                aria-label={`Remove ${pkg}`}
                 className="rounded-sm p-0.5 transition-colors hover:bg-secondary-foreground/20"
                 onClick={() => handleRemove(pkg)}
                 type="button"
