@@ -85,36 +85,34 @@ export const PackageSearch = ({
   return (
     <div className="absolute bottom-4 left-1/2 w-full max-w-xs -translate-x-1/2 md:max-w-md">
       <Command className="w-full rounded-lg border">
-        {shouldShowResults ? (
-          <CommandList>
-            {error ? (
-              <CommandEmpty>Failed to load packages. Try again.</CommandEmpty>
-            ) : null}
-            {showEmptyState ? (
-              <CommandEmpty className="flex items-center gap-2 p-4 text-muted-foreground text-sm">
-                <PackageSearchIcon className="size-3" /> No packages found.
-              </CommandEmpty>
-            ) : null}
-            {showResults ? (
-              <CommandGroup>
-                {data.objects.map((item) => (
-                  <CommandItem
-                    key={item.package.name}
-                    onSelect={() => handleSelect(item.package.name)}
-                    value={item.package.name}
-                  >
-                    <span className="shrink-0 truncate font-medium">
-                      {item.package.name}
-                    </span>
-                    <span className="truncate text-muted-foreground text-xs">
-                      {item.package.description}
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ) : null}
-          </CommandList>
-        ) : null}
+        <CommandList>
+          {shouldShowResults && error ? (
+            <CommandEmpty>Failed to load packages. Try again.</CommandEmpty>
+          ) : null}
+          {shouldShowResults && showEmptyState ? (
+            <CommandEmpty className="flex items-center gap-2 p-4 text-muted-foreground text-sm">
+              <PackageSearchIcon className="size-3" /> No packages found.
+            </CommandEmpty>
+          ) : null}
+          {shouldShowResults && showResults ? (
+            <CommandGroup>
+              {data.objects.map((item) => (
+                <CommandItem
+                  key={item.package.name}
+                  onSelect={() => handleSelect(item.package.name)}
+                  value={item.package.name}
+                >
+                  <span className="shrink-0 truncate font-medium">
+                    {item.package.name}
+                  </span>
+                  <span className="truncate text-muted-foreground text-xs">
+                    {item.package.description}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
+        </CommandList>
         <div className="flex items-center gap-2 overflow-x-auto px-3">
           <PackageSearchIcon className="size-4 shrink-0 opacity-50" />
           {packages.map((pkg) => (
