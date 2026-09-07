@@ -9,7 +9,6 @@ import {
   searchPackages,
 } from "@/actions/package/search";
 import { cn } from "@/lib/utils";
-import { usePackages } from "@/providers/filters";
 import { Badge } from "./ui/badge";
 import {
   Command,
@@ -21,10 +20,17 @@ import {
 
 const DEBOUNCE_MS = 200;
 
-export const PackageSearch = () => {
+interface PackageSearchProps {
+  onPackagesChange: (packages: string[]) => void;
+  packages: string[];
+}
+
+export const PackageSearch = ({
+  onPackagesChange,
+  packages,
+}: PackageSearchProps) => {
   const [value, setValue] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
-  const [packages, setPackages] = usePackages();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,13 +53,13 @@ export const PackageSearch = () => {
 
   const handleSelect = (packageName: string) => {
     if (!packages.includes(packageName)) {
-      setPackages([...packages, packageName]);
+      onPackagesChange([...packages, packageName]);
     }
     setValue("");
   };
 
   const handleRemove = (packageName: string) => {
-    setPackages(packages.filter((pkg) => pkg !== packageName));
+    onPackagesChange(packages.filter((pkg) => pkg !== packageName));
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -68,7 +74,7 @@ export const PackageSearch = () => {
       event.preventDefault();
       const newPackages = [...packages];
       newPackages.pop();
-      setPackages(newPackages);
+      onPackagesChange(newPackages);
     }
   };
 
@@ -115,6 +121,7 @@ export const PackageSearch = () => {
             <Badge className="gap-1 pr-1 pl-2" key={pkg} variant="secondary">
               {pkg}
               <button
+                aria-label={`Remove ${pkg}`}
                 className="rounded-sm p-0.5 transition-colors hover:bg-secondary-foreground/20"
                 onClick={() => handleRemove(pkg)}
                 type="button"
