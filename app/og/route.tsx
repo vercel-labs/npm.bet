@@ -1,14 +1,14 @@
-import {
-  isSameMonth,
-  isSameWeek,
-  isToday,
-  parseISO,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 import { getPackageData } from "@/actions/package/get";
+import { shouldRemoveIncompleteDate } from "@/lib/chart-utils";
+import {
+  type PreparedDownload,
+  parseZeroMode,
+  prepareDownloadData,
+} from "@/lib/download-data";
+
+type StaticDownload = PreparedDownload & { denominatorEstimated?: boolean };
 
 export const contentType = "image/png";
 
@@ -51,7 +51,7 @@ const createSvgPath = (points: Point[]): string => {
 };
 
 const normalizeData = (
-  data: { downloads: number; date?: string; day?: string }[],
+  data: StaticDownload[],
   width: number,
   height: number,
   maxDownloads: number
@@ -65,8 +65,14 @@ const normalizeData = (
   const chartHeight = height - padding * 2;
 
   return data.map((item, index) => ({
-    x: padding + (index / (data.length - 1)) * chartWidth,
-    y: padding + chartHeight - (item.downloads / maxDownloads) * chartHeight,
+    ...item,
+    x:
+      padding +
+      (data.length === 1 ? 0.5 : index / (data.length - 1)) * chartWidth,
+    y:
+      padding +
+      chartHeight -
+      (item.downloads / (maxDownloads || 1)) * chartHeight,
   }));
 };
 
@@ -80,56 +86,10 @@ const formatNumber = (num: number): string => {
   return num.toString();
 };
 
-const getWeekStart = (date: Date): string => {
-  const weekStart = startOfWeek(date, { weekStartsOn: 0 });
-  return weekStart.toISOString().split("T")[0];
-};
-
-const getMonthStart = (date: Date): string => {
-  const monthStart = startOfMonth(date);
-  return monthStart.toISOString().split("T")[0];
-};
-
-const groupData = (
-  downloads: { downloads: number; day: string }[],
-  groupBy: string
-): { date: string; downloads: number }[] => {
-  if (groupBy === "day") {
-    return downloads.map((item) => ({
-      date: item.day,
-      downloads: item.downloads,
-    }));
-  }
-
-  const getGroupKey = (date: Date): string => {
-    if (groupBy === "week") {
-      return getWeekStart(date);
-    }
-    return getMonthStart(date);
-  };
-
-  const grouped = downloads.reduce(
-    (acc, item) => {
-      const groupKey = getGroupKey(new Date(item.day));
-      if (!acc[groupKey]) {
-        acc[groupKey] = 0;
-      }
-      acc[groupKey] += item.downloads;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
-  return Object.entries(grouped).map(([date, downloadCount]) => ({
-    date,
-    downloads: downloadCount,
-  }));
-};
-
-const removeCurrentPeriodFromData = (
-  data: { date: string; downloads: number }[],
+const removeCurrentPeriodFromData = <T extends { date: string }>(
+  data: T[],
   grouping: string
-): { date: string; downloads: number }[] => {
+): T[] => {
   if (data.length <= 1) {
     return data;
   }
@@ -139,19 +99,7 @@ const removeCurrentPeriodFromData = (
     return data;
   }
 
-  const lastDate = parseISO(lastDateString);
-  const now = new Date();
-  let shouldRemove = false;
-
-  if (grouping === "day") {
-    shouldRemove = isToday(lastDate);
-  } else if (grouping === "week") {
-    shouldRemove = isSameWeek(lastDate, now, { weekStartsOn: 0 });
-  } else if (grouping === "month") {
-    shouldRemove = isSameMonth(lastDate, now);
-  }
-
-  if (shouldRemove) {
+  if (shouldRemoveIncompleteDate(lastDateString, grouping)) {
     return data.slice(0, -1);
   }
 
@@ -161,19 +109,23 @@ const removeCurrentPeriodFromData = (
 const computeShareData = (
   groupedPackageData: {
     package: string;
-    downloads: { date: string; downloads: number }[];
+    downloads: StaticDownload[];
   }[]
 ) => {
   let grandTotalDownloads = 0;
   const packageTotals: Record<string, number> = {};
   const downloadsByDate: Record<string, Record<string, number>> = {};
   const overallShareByPackage: Record<string, number> = {};
+  const estimatedDates = new Set<string>();
 
   for (const pkg of groupedPackageData) {
     const pkgTotal = pkg.downloads.reduce((s, d) => s + d.downloads, 0);
     packageTotals[pkg.package] = pkgTotal;
     grandTotalDownloads += pkgTotal;
     for (const d of pkg.downloads) {
+      if (d.estimatedDays > 0) {
+        estimatedDates.add(d.date);
+      }
       if (!downloadsByDate[d.date]) {
         downloadsByDate[d.date] = {};
       }
@@ -195,6 +147,7 @@ const computeShareData = (
       const total = Object.values(dateData).reduce((s, v) => s + v, 0);
       return {
         ...d,
+        denominatorEstimated: estimatedDates.has(d.date),
         downloads:
           total > 0 ? Number(((d.downloads / total) * 100).toFixed(1)) : 0,
       };
@@ -269,6 +222,7 @@ export const GET = async (request: NextRequest) => {
   const grouping = searchParams.get("grouping") ?? "week";
   const metric = searchParams.get("metric") ?? "downloads";
   const isShare = metric === "share";
+  const zeroMode = parseZeroMode(searchParams.get("zeroMode"));
   const removeCurrentPeriod =
     searchParams.get("removeCurrentPeriod") !== "false";
 
@@ -280,7 +234,7 @@ export const GET = async (request: NextRequest) => {
 
     // Apply grouping to each package's data
     const groupedPackageData = packageDataArray.map((pkg) => {
-      const grouped = groupData(pkg.downloads, grouping);
+      const grouped = prepareDownloadData(pkg.downloads, grouping, zeroMode);
       const processed = removeCurrentPeriod
         ? removeCurrentPeriodFromData(grouped, grouping)
         : grouped;
@@ -289,6 +243,16 @@ export const GET = async (request: NextRequest) => {
         downloads: processed,
       };
     });
+
+    const hasEstimates = groupedPackageData.some((pkg) =>
+      pkg.downloads.some((item) => item.estimatedDays > 0)
+    );
+    const estimateDisclosure = isShare
+      ? "Includes estimated downloads; share denominators include estimates"
+      : "Includes estimated downloads";
+    const chartTitle = isShare
+      ? "npm package download share (%)"
+      : "npm package download comparison chart";
 
     // Compute overall share stats and convert to share (%) if metric is "share"
     const overallShareByPackage = isShare
@@ -301,6 +265,7 @@ export const GET = async (request: NextRequest) => {
           100,
           Math.ceil(
             (Math.max(
+              0,
               ...groupedPackageData.flatMap((pkg) =>
                 pkg.downloads.map((d) => d.downloads)
               )
@@ -310,6 +275,7 @@ export const GET = async (request: NextRequest) => {
           ) * 10
         )
       : Math.max(
+          0,
           ...groupedPackageData.flatMap((pkg) =>
             pkg.downloads.map((d) => d.downloads)
           )
@@ -317,16 +283,22 @@ export const GET = async (request: NextRequest) => {
 
     // Create SVG chart dimensions
     const chartWidth = 1100;
-    const chartHeight = 440;
+    const chartHeight = hasEstimates ? 416 : 440;
 
     const chart = (
       <svg
-        aria-label="npm package download comparison chart"
+        aria-label={`${chartTitle}${hasEstimates ? `. ${estimateDisclosure}` : ""}`}
         height={chartHeight}
         role="img"
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         width={chartWidth}
       >
+        <title>{chartTitle}</title>
+        <desc>
+          {hasEstimates
+            ? `${estimateDisclosure}. Hollow dashed circles mark estimate-affected points.`
+            : "Reported downloads only."}
+        </desc>
         {/* Grid lines */}
         <line
           stroke="#e5e7eb"
@@ -361,13 +333,35 @@ export const GET = async (request: NextRequest) => {
           const path = createSvgPath(points);
 
           return (
-            <path
-              d={path}
-              fill="none"
-              key={pkg.package}
-              stroke={colors[index % colors.length]}
-              strokeWidth="3"
-            />
+            <g key={pkg.package}>
+              <path
+                d={path}
+                fill="none"
+                stroke={colors[index % colors.length]}
+                strokeWidth="3"
+              />
+              {points
+                .filter(
+                  (point) =>
+                    point.estimatedDays > 0 || point.denominatorEstimated
+                )
+                .map((point) => (
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    fill="#ffffff"
+                    key={point.date}
+                    r="5"
+                    stroke={colors[index % colors.length]}
+                    strokeDasharray="3 2"
+                    strokeWidth="2"
+                  >
+                    <title>
+                      {`${pkg.package}, ${point.date}: ${point.downloads}${isShare ? "% share" : " downloads"}; ${point.reportedDownloads} reported downloads; ${point.estimatedDays} estimated days${point.denominatorEstimated ? "; share denominator includes estimates" : ""}`}
+                    </title>
+                  </circle>
+                ))}
+            </g>
           );
         })}
       </svg>
@@ -386,6 +380,9 @@ export const GET = async (request: NextRequest) => {
           const displayValue = isShare
             ? `${overallShareByPackage[pkg.package] ?? 0}%`
             : formatNumber(totalDownloads);
+          const estimated = isShare
+            ? hasEstimates
+            : pkg.downloads.some((point) => point.estimatedDays > 0);
           return (
             <div
               key={pkg.package}
@@ -402,7 +399,7 @@ export const GET = async (request: NextRequest) => {
                 {pkg.package}
               </span>
               <span tw="text-lg font-semibold text-[#737373]">
-                {displayValue}
+                {estimated ? `≈ ${displayValue}` : displayValue}
               </span>
             </div>
           );
@@ -441,6 +438,32 @@ export const GET = async (request: NextRequest) => {
         <div tw="flex flex-col bg-white rounded-lg border border-[#e5e5e5] overflow-hidden">
           {chart}
           {legend}
+          {hasEstimates ? (
+            <div
+              style={{ gap: "8px", marginBottom: "8px", fontSize: "14px" }}
+              tw="flex items-center justify-center text-[#737373]"
+            >
+              <svg
+                aria-label="Estimate-affected point"
+                height={16}
+                role="img"
+                viewBox="0 0 16 16"
+                width={16}
+              >
+                <title>Estimate-affected point</title>
+                <circle
+                  cx="8"
+                  cy="8"
+                  fill="#ffffff"
+                  r="5"
+                  stroke="#737373"
+                  strokeDasharray="3 2"
+                  strokeWidth="2"
+                />
+              </svg>
+              <span>{estimateDisclosure}</span>
+            </div>
+          ) : null}
         </div>
         {logo}
       </div>,

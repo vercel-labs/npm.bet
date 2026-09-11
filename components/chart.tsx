@@ -3,20 +3,22 @@
 import { addMonths, addWeeks } from "date-fns";
 import { useEffect, useMemo } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { DownloadTooltip } from "@/components/download-tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
-  formatNumber,
-  groupData,
-  shouldRemoveIncompleteDate,
-} from "@/lib/chart-utils";
-import { useGrouping, useMetric } from "@/providers/filters";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatNumber, shouldRemoveIncompleteDate } from "@/lib/chart-utils";
+import { prepareDownloadData } from "@/lib/download-data";
+import { useGrouping, useMetric, useZeroMode } from "@/providers/filters";
 
 export const description = "An interactive line chart";
 
@@ -57,6 +59,21 @@ const getDateRangeEnd = (startDate: string, grouping: string) => {
 export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
   const [grouping] = useGrouping();
   const [metric, setMetric] = useMetric();
+  const [zeroMode] = useZeroMode();
+  const preparedByPackage = useMemo(
+    () =>
+      new Map(
+        data.map((pkg) => [
+          pkg.package,
+          new Map(
+            prepareDownloadData(pkg.downloads, grouping, zeroMode).map(
+              (point) => [point.date, point]
+            )
+          ),
+        ])
+      ),
+    [data, grouping, zeroMode]
+  );
   const isShare = metric === "share" && data.length > 1;
   const packageNames = useMemo(() => data.map((pkg) => pkg.package), [data]);
 
@@ -71,8 +88,8 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
     const packagesByDate: Record<string, Record<string, number>> = {};
 
     for (const pkg of data) {
-      const grouped = groupData(pkg.downloads, grouping);
-      for (const item of grouped) {
+      const grouped = preparedByPackage.get(pkg.package);
+      for (const item of grouped?.values() ?? []) {
         allDates.add(item.date);
         if (!packagesByDate[item.date]) {
           packagesByDate[item.date] = {};
@@ -121,10 +138,20 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
 
       return row;
     });
-  }, [data, grouping, isShare, packageNames]);
+  }, [data, grouping, isShare, packageNames, preparedByPackage]);
+
+  const hasEstimates = chartData.some((row) =>
+    packageNames.some(
+      (name) =>
+        (preparedByPackage.get(name)?.get(String(row.date))?.estimatedDays ??
+          0) > 0
+    )
+  );
 
   const shareYMax = useMemo(() => {
-    if (!isShare || chartData.length === 0) return 100;
+    if (!isShare || chartData.length === 0) {
+      return 100;
+    }
     const maxValue = Math.max(
       ...chartData.flatMap((row) =>
         typeof row === "string"
@@ -148,7 +175,7 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
 
   return (
     <Card className="size-full shadow-none">
-      <CardContent className="size-full">
+      <CardContent className="min-h-0 flex-1">
         <ChartContainer className="size-full" config={chartConfig}>
           <LineChart data={chartData}>
             <CartesianGrid vertical={false} />
@@ -185,39 +212,10 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
             />
             <ChartTooltip
               content={
-                <ChartTooltipContent
-                  className="[&_.flex.justify-between]:gap-8"
-                  indicator="dot"
-                  labelFormatter={(value, payload) => {
-                    if (!payload?.[0]?.payload) {
-                      return value;
-                    }
-                    const parseDate = (dateStr: string) => {
-                      const [year, month, day] = dateStr.split("-");
-                      return new Date(
-                        Number(year),
-                        Number(month) - 1,
-                        Number(day)
-                      );
-                    };
-                    const startDate = parseDate(value);
-                    const endDate = parseDate(payload[0].payload.dateEnd);
-                    const formatDate = (date: Date) =>
-                      date.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      });
-
-                    if (grouping === "day") {
-                      return formatDate(startDate);
-                    }
-                    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
-                  }}
-                  valueFormatter={
-                    isShare
-                      ? (value) => `${Number(value).toFixed(1)}%`
-                      : undefined
-                  }
+                <DownloadTooltip
+                  grouping={grouping}
+                  isShare={isShare}
+                  preparedByPackage={preparedByPackage}
                 />
               }
               cursor={false}
@@ -225,14 +223,78 @@ export const ChartAreaInteractive = ({ data }: ChartAreaInteractiveProps) => {
             {data.map((pkg, index) => (
               <Line
                 dataKey={pkg.package}
-                dot={false}
+                dot={({ cx, cy, payload }) => {
+                  const point = preparedByPackage
+                    .get(pkg.package)
+                    ?.get(payload.date);
+                  const estimated = (point?.estimatedDays ?? 0) > 0;
+                  const denominatorEstimated =
+                    isShare &&
+                    packageNames.some(
+                      (name) =>
+                        (preparedByPackage.get(name)?.get(payload.date)
+                          ?.estimatedDays ?? 0) > 0
+                    );
+                  return estimated || denominatorEstimated ? (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      data-estimated-date={payload.date}
+                      data-estimated-package={pkg.package}
+                      fill="var(--background)"
+                      key={`${pkg.package}-${payload.date}`}
+                      r={4}
+                      stroke={colors[index % colors.length]}
+                      strokeDasharray="2 2"
+                      strokeWidth={1.5}
+                    >
+                      <title>
+                        {pkg.package}:{" "}
+                        {estimated
+                          ? "estimated downloads"
+                          : "share includes estimates"}
+                      </title>
+                    </circle>
+                  ) : (
+                    <g key={`${pkg.package}-${payload.date}`} />
+                  );
+                }}
                 key={pkg.package}
                 stroke={colors[index % colors.length]}
                 strokeWidth={2}
                 type="monotone"
               />
             ))}
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend
+              content={(props) => (
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-3">
+                  <ChartLegendContent
+                    className="pt-0"
+                    payload={props.payload}
+                    verticalAlign={props.verticalAlign}
+                  />
+                  {hasEstimates && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          aria-label="About estimated downloads"
+                          className="inline-flex items-center gap-1 rounded-sm text-muted-foreground text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          type="button"
+                        >
+                          <span aria-hidden="true">≈</span>
+                          <span className="hidden sm:inline">Estimated</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-64" sideOffset={6}>
+                        Short zero-download gaps are estimated. Hover a point to
+                        compare with npm-reported counts.
+                        {isShare && " Shares include estimated downloads."}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              )}
+            />
           </LineChart>
         </ChartContainer>
       </CardContent>

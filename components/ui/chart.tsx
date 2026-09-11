@@ -116,6 +116,7 @@ function ChartTooltipContent({
   labelClassName,
   formatter,
   valueFormatter,
+  footer,
   color,
   nameKey,
   labelKey,
@@ -127,6 +128,7 @@ function ChartTooltipContent({
     nameKey?: string
     labelKey?: string
     valueFormatter?: (value: number | string) => string
+    footer?: React.ReactNode
   }) {
   const { config } = useChart()
 
@@ -250,6 +252,7 @@ function ChartTooltipContent({
             )
           })}
       </div>
+      {footer}
     </div>
   )
 }

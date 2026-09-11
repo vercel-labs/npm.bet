@@ -22,6 +22,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { ZeroModeToggle } from "@/components/zero-mode-toggle";
 import { useTimeRange } from "@/providers/filters";
 
 interface PackageHeaderProps {
@@ -44,6 +45,7 @@ export const PackageHeader = ({ packages }: PackageHeaderProps) => {
         <TimeRangeSelector className="hidden sm:flex" />
         <GroupingSelector className="hidden sm:flex" />
         {packages.length > 1 && <MetricSelector className="hidden sm:flex" />}
+        <ZeroModeToggle className="hidden sm:inline-flex" />
 
         <ButtonGroup className="sm:hidden">
           <Drawer>
@@ -58,10 +60,13 @@ export const PackageHeader = ({ packages }: PackageHeaderProps) => {
                   <DrawerTitle>Settings</DrawerTitle>
                   <DrawerDescription>Customize your chart.</DrawerDescription>
                 </DrawerHeader>
-                <div className="space-y-2 p-4 pb-0">
+                <div className="flex flex-col gap-2 p-4 pb-0">
                   <TimeRangeSelector className="w-full" />
                   <GroupingSelector className="w-full" />
-                  {packages.length > 1 && <MetricSelector className="w-full" />}
+                  <div className="flex items-center gap-2">
+                    {packages.length > 1 && <MetricSelector />}
+                    <ZeroModeToggle showLabel size="sm" />
+                  </div>
                 </div>
                 <DrawerFooter>
                   <DrawerClose asChild>

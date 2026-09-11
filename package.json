@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "check": "ultracite check",
     "fix": "ultracite fix"
   },

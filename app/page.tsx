@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Main } from "@/components/main";
+import { parseZeroMode } from "@/lib/download-data";
 
 interface HomeProps {
   searchParams: Promise<{
@@ -9,6 +10,7 @@ interface HomeProps {
     timeRange?: string;
     grouping?: string;
     metric?: string;
+    zeroMode?: string;
   }>;
 }
 
@@ -18,7 +20,7 @@ const baseUrl = new URL(
 );
 
 export const generateMetadata = async ({ searchParams }: HomeProps) => {
-  const { q, timeRange, grouping, metric } = await searchParams;
+  const { q, timeRange, grouping, metric, zeroMode } = await searchParams;
 
   if (!q) {
     return {
@@ -31,6 +33,7 @@ export const generateMetadata = async ({ searchParams }: HomeProps) => {
   // Build OG image URL with query params
   const ogUrl = new URL("/og", baseUrl);
   ogUrl.searchParams.set("q", q);
+  ogUrl.searchParams.set("zeroMode", parseZeroMode(zeroMode));
   if (timeRange) {
     ogUrl.searchParams.set("timeRange", timeRange);
   }

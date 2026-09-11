@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "rootDir": "lib",
+    "outDir": ".test-build",
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["lib/chart-utils.ts", "lib/download-data.ts"]
+}

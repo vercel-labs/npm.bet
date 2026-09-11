@@ -1,0 +1,246 @@
+{
+  "sources": [
+    {
+      "url": "https://api.npmjs.org/downloads/range/2026-08-25:2026-09-10/react",
+      "fetchedAt": "2026-09-11T16:36:51.399Z",
+      "sha256": "fb241586225c893f326a864b7d7b1786158c8d5eeaeef73d4931f5a531ec6f65"
+    },
+    {
+      "url": "https://api.npmjs.org/downloads/range/2026-08-25:2026-09-10/react-dom",
+      "fetchedAt": "2026-09-11T16:36:51.431Z",
+      "sha256": "93b4dd45c032227eabb84bdd5ade499e1f9df8a33d9585c90ee2daef78e2ebe1"
+    },
+    {
+      "url": "https://api.npmjs.org/downloads/range/2026-08-25:2026-09-10/next",
+      "fetchedAt": "2026-09-11T16:36:51.480Z",
+      "sha256": "e9c6ea20cfba1e0a8247bb7349b7deaa07fe8cb09e911cfc63aea0c0f007dd4d"
+    }
+  ],
+  "packages": [
+    {
+      "start": "2026-08-25",
+      "end": "2026-09-10",
+      "package": "react",
+      "downloads": [
+        {
+          "downloads": 29424217,
+          "day": "2026-08-25"
+        },
+        {
+          "downloads": 28855243,
+          "day": "2026-08-26"
+        },
+        {
+          "downloads": 28634465,
+          "day": "2026-08-27"
+        },
+        {
+          "downloads": 25303565,
+          "day": "2026-08-28"
+        },
+        {
+          "downloads": 15006139,
+          "day": "2026-08-29"
+        },
+        {
+          "downloads": 15281994,
+          "day": "2026-08-30"
+        },
+        {
+          "downloads": 26910414,
+          "day": "2026-08-31"
+        },
+        {
+          "downloads": 30600876,
+          "day": "2026-09-01"
+        },
+        {
+          "downloads": 31679775,
+          "day": "2026-09-02"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-03"
+        },
+        {
+          "downloads": 28047443,
+          "day": "2026-09-04"
+        },
+        {
+          "downloads": 17903937,
+          "day": "2026-09-05"
+        },
+        {
+          "downloads": 17693894,
+          "day": "2026-09-06"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-07"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-08"
+        },
+        {
+          "downloads": 32073030,
+          "day": "2026-09-09"
+        },
+        {
+          "downloads": 31649015,
+          "day": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "start": "2026-08-25",
+      "end": "2026-09-10",
+      "package": "react-dom",
+      "downloads": [
+        {
+          "downloads": 27638198,
+          "day": "2026-08-25"
+        },
+        {
+          "downloads": 27055461,
+          "day": "2026-08-26"
+        },
+        {
+          "downloads": 26863171,
+          "day": "2026-08-27"
+        },
+        {
+          "downloads": 23760151,
+          "day": "2026-08-28"
+        },
+        {
+          "downloads": 14202954,
+          "day": "2026-08-29"
+        },
+        {
+          "downloads": 14451736,
+          "day": "2026-08-30"
+        },
+        {
+          "downloads": 25215861,
+          "day": "2026-08-31"
+        },
+        {
+          "downloads": 28695698,
+          "day": "2026-09-01"
+        },
+        {
+          "downloads": 29718414,
+          "day": "2026-09-02"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-03"
+        },
+        {
+          "downloads": 26272887,
+          "day": "2026-09-04"
+        },
+        {
+          "downloads": 16987576,
+          "day": "2026-09-05"
+        },
+        {
+          "downloads": 16803189,
+          "day": "2026-09-06"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-07"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-08"
+        },
+        {
+          "downloads": 30113801,
+          "day": "2026-09-09"
+        },
+        {
+          "downloads": 29677277,
+          "day": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "start": "2026-08-25",
+      "end": "2026-09-10",
+      "package": "next",
+      "downloads": [
+        {
+          "downloads": 9292938,
+          "day": "2026-08-25"
+        },
+        {
+          "downloads": 9099879,
+          "day": "2026-08-26"
+        },
+        {
+          "downloads": 9119588,
+          "day": "2026-08-27"
+        },
+        {
+          "downloads": 8371072,
+          "day": "2026-08-28"
+        },
+        {
+          "downloads": 5296094,
+          "day": "2026-08-29"
+        },
+        {
+          "downloads": 5373583,
+          "day": "2026-08-30"
+        },
+        {
+          "downloads": 8930505,
+          "day": "2026-08-31"
+        },
+        {
+          "downloads": 10079354,
+          "day": "2026-09-01"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-02"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-03"
+        },
+        {
+          "downloads": 9218297,
+          "day": "2026-09-04"
+        },
+        {
+          "downloads": 6291196,
+          "day": "2026-09-05"
+        },
+        {
+          "downloads": 6126400,
+          "day": "2026-09-06"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-07"
+        },
+        {
+          "downloads": 0,
+          "day": "2026-09-08"
+        },
+        {
+          "downloads": 10777759,
+          "day": "2026-09-09"
+        },
+        {
+          "downloads": 10408036,
+          "day": "2026-09-10"
+        }
+      ]
+    }
+  ]
+}

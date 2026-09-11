@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { parseZeroMode } from "@/lib/download-data";
 import { Content } from "./components/content";
 import { PackageFooter } from "./components/footer";
 import { PackageHeader } from "./components/header";
@@ -11,6 +12,7 @@ interface PackagePageProps {
     timeRange?: string;
     grouping?: string;
     metric?: string;
+    zeroMode?: string;
   }>;
 }
 
@@ -24,12 +26,13 @@ export const generateMetadata = async ({
   searchParams,
 }: PackagePageProps): Promise<Metadata> => {
   const { package: packageParam } = await params;
-  const { timeRange, grouping, metric } = await searchParams;
+  const { timeRange, grouping, metric, zeroMode } = await searchParams;
   const packages = decodeURIComponent(packageParam).split(",");
   const title = packages.length > 1 ? packages.join(" vs ") : packages[0];
 
   const ogUrl = new URL("/og", baseUrl);
   ogUrl.searchParams.set("q", packages.join(","));
+  ogUrl.searchParams.set("zeroMode", parseZeroMode(zeroMode));
   if (timeRange) {
     ogUrl.searchParams.set("timeRange", timeRange);
   }

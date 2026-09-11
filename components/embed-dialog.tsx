@@ -2,7 +2,13 @@
 
 import { CheckIcon, CodeIcon, CopyIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { useGrouping, usePackages, useTimeRange } from "@/providers/filters";
+import {
+  useGrouping,
+  useMetric,
+  usePackages,
+  useTimeRange,
+  useZeroMode,
+} from "@/providers/filters";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -23,6 +29,8 @@ export const EmbedDialog = () => {
   const [packages] = usePackages();
   const [timeRange] = useTimeRange();
   const [grouping] = useGrouping();
+  const [metric] = useMetric();
+  const [zeroMode] = useZeroMode();
 
   const handleTabChange = useCallback((value: string) => {
     setTab(value as SnippetType);
@@ -40,9 +48,11 @@ export const EmbedDialog = () => {
 
     params.set("timeRange", timeRange);
     params.set("grouping", grouping);
+    params.set("metric", metric);
+    params.set("zeroMode", zeroMode);
 
     return `${baseUrl}?${params.toString()}`;
-  }, [packages, timeRange, grouping]);
+  }, [packages, timeRange, grouping, metric, zeroMode]);
 
   const snippets = useMemo(
     () => ({

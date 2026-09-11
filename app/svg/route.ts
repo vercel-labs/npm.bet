@@ -3,9 +3,14 @@ import { getPackageData, type PackageData } from "@/actions/package/get";
 import {
   escapeXml,
   formatNumber,
-  groupData,
   shouldRemoveIncompleteDate,
 } from "@/lib/chart-utils";
+import {
+  type PreparedDownload,
+  parseZeroMode,
+  prepareDownloadData,
+  type ZeroMode,
+} from "@/lib/download-data";
 
 const colors = [
   "#3b82f6", // blue
@@ -17,24 +22,29 @@ const colors = [
 
 interface ChartDataPoint {
   date: string;
-  [key: string]: number | string;
+  packages: Record<
+    string,
+    PreparedDownload & { denominatorEstimated?: boolean }
+  >;
 }
 
 const mergePackageData = (
   data: PackageData[],
-  grouping: string
+  grouping: string,
+  zeroMode: ZeroMode,
+  isShare: boolean
 ): ChartDataPoint[] => {
   const allDates = new Set<string>();
-  const packagesByDate: Record<string, Record<string, number>> = {};
+  const packagesByDate: Record<string, Record<string, PreparedDownload>> = {};
 
   for (const pkg of data) {
-    const grouped = groupData(pkg.downloads, grouping);
+    const grouped = prepareDownloadData(pkg.downloads, grouping, zeroMode);
     for (const item of grouped) {
       allDates.add(item.date);
       if (!packagesByDate[item.date]) {
         packagesByDate[item.date] = {};
       }
-      packagesByDate[item.date][pkg.package] = item.downloads;
+      packagesByDate[item.date][pkg.package] = item;
     }
   }
 
@@ -51,20 +61,56 @@ const mergePackageData = (
     }
   }
 
-  return sortedDates.map((date) => ({
-    date,
-    ...packagesByDate[date],
-  }));
+  return sortedDates.map((date) => {
+    const packages = packagesByDate[date];
+    if (!isShare) {
+      return { date, packages };
+    }
+    const total = Object.values(packages).reduce(
+      (sum, item) => sum + item.downloads,
+      0
+    );
+    const denominatorEstimated = Object.values(packages).some(
+      (item) => item.estimatedDays > 0
+    );
+    return {
+      date,
+      packages: Object.fromEntries(
+        Object.entries(packages).map(([name, item]) => [
+          name,
+          {
+            ...item,
+            downloads: total > 0 ? (item.downloads / total) * 100 : 0,
+            denominatorEstimated,
+          },
+        ])
+      ),
+    };
+  });
 };
 
 const generateSVGChart = (
   packageData: PackageData[],
-  grouping: string
+  grouping: string,
+  zeroMode: ZeroMode,
+  isShare: boolean
 ): string => {
+  const chartData = mergePackageData(packageData, grouping, zeroMode, isShare);
+  const hasEstimates = chartData.some((row) =>
+    Object.values(row.packages).some((item) => item.estimatedDays > 0)
+  );
+  const estimateDisclosure = isShare
+    ? "Includes estimated downloads; share denominators include estimates"
+    : "Includes estimated downloads";
+  const chartTitle = isShare
+    ? "npm package download share (%)"
+    : "npm package downloads";
   const width = 800;
   // Adjust height based on number of packages for legend
   const legendItemHeight = 18;
-  const legendHeight = Math.max(packageData.length * legendItemHeight, 20);
+  const legendHeight =
+    Math.max(packageData.length * legendItemHeight, 20) +
+    (hasEstimates ? legendItemHeight : 0);
   const baseHeight = 400;
   const height = baseHeight + legendHeight;
 
@@ -76,8 +122,6 @@ const generateSVGChart = (
   };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = baseHeight - 100; // Fixed chart height (400 - top 40 - bottom 60)
-
-  const chartData = mergePackageData(packageData, grouping);
 
   if (chartData.length === 0) {
     return `
@@ -91,19 +135,22 @@ const generateSVGChart = (
   }
 
   // Calculate scales
-  const maxDownloads = Math.max(
-    ...chartData.flatMap((d) =>
-      Object.entries(d)
-        .filter(([key]) => key !== "date")
-        .map(([, value]) => value as number)
-    )
-  );
+  const maxDownloads = isShare
+    ? 100
+    : Math.max(
+        0,
+        ...chartData.flatMap((d) =>
+          Object.values(d.packages).map((item) => item.downloads)
+        )
+      );
 
   const xScale = (index: number) =>
-    padding.left + (index / (chartData.length - 1)) * chartWidth;
+    padding.left +
+    (chartData.length === 1 ? 0.5 : index / (chartData.length - 1)) *
+      chartWidth;
 
   const yScale = (value: number) =>
-    padding.top + chartHeight - (value / maxDownloads) * chartHeight;
+    padding.top + chartHeight - (value / (maxDownloads || 1)) * chartHeight;
 
   // Generate Y-axis ticks
   const yTicks = 5;
@@ -150,15 +197,25 @@ const generateSVGChart = (
   const lines = packageData.map((pkg, pkgIndex) => {
     const points = chartData
       .map((d, i) => {
-        const value = d[pkg.package] as number | undefined;
-        if (value === undefined) {
+        const item = d.packages[pkg.package];
+        if (!item) {
           return null;
         }
-        return { x: xScale(i), y: yScale(value) };
+        return { x: xScale(i), y: yScale(item.downloads) };
       })
       .filter((p): p is { x: number; y: number } => p !== null);
 
     const pathData = createSmoothPath(points);
+    const markers = chartData
+      .map((row, index) => {
+        const item = row.packages[pkg.package];
+        if (!(item && (item.estimatedDays > 0 || item.denominatorEstimated))) {
+          return "";
+        }
+        const label = `${pkg.package}, ${row.date}: ${isShare ? `${item.downloads.toFixed(1)}% share` : `${item.downloads} downloads`}; ${item.reportedDownloads} reported downloads; ${item.estimatedDays} estimated days${item.denominatorEstimated ? "; share denominator includes estimates" : ""}`;
+        return `<circle cx="${xScale(index)}" cy="${yScale(item.downloads)}" r="4" fill="#ffffff" stroke="${colors[pkgIndex % colors.length]}" stroke-width="2" stroke-dasharray="2 2"><title>${escapeXml(label)}</title></circle>`;
+      })
+      .join("");
 
     return `
       <path
@@ -169,6 +226,7 @@ const generateSVGChart = (
         stroke-linecap="round"
         stroke-linejoin="round"
       />
+      ${markers}
     `;
   });
 
@@ -212,7 +270,7 @@ const generateSVGChart = (
           fill="#666"
           alignment-baseline="middle"
         >
-          ${formatNumber(value)}
+          ${isShare ? `${value}%` : formatNumber(value)}
         </text>
         <line
           x1="${padding.left}"
@@ -241,8 +299,17 @@ const generateSVGChart = (
     )
     .join("");
 
+  const estimateLegend = hasEstimates
+    ? `<g transform="translate(${padding.left}, ${legendStartY + packageData.length * legendItemHeight})">
+        <circle cx="10" cy="0" r="4" fill="#ffffff" stroke="#666" stroke-width="2" stroke-dasharray="2 2"/>
+        <text x="25" y="0" font-family="Arial" font-size="12" fill="#333" alignment-baseline="middle">${estimateDisclosure}</text>
+      </g>`
+    : "";
+
   return `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" role="img" aria-labelledby="chart-title chart-description">
+      <title id="chart-title">${chartTitle}</title>
+      <desc id="chart-description">${escapeXml(packageData.map((pkg) => pkg.package).join(" vs "))}. ${hasEstimates ? `${estimateDisclosure}. Hollow dashed circles mark estimate-affected points.` : "Reported downloads only."}</desc>
       <rect width="${width}" height="${height}" fill="#ffffff"/>
 
       <!-- Brand Label with Logo -->
@@ -304,6 +371,7 @@ const generateSVGChart = (
 
       <!-- Legend -->
       ${legend}
+      ${estimateLegend}
     </svg>
   `;
 };
@@ -314,6 +382,8 @@ export async function GET(request: NextRequest) {
     const packagesParam = searchParams.get("q");
     const timeRange = searchParams.get("timeRange") || "last-year";
     const grouping = searchParams.get("grouping") || "week";
+    const zeroMode = parseZeroMode(searchParams.get("zeroMode"));
+    const isShare = searchParams.get("metric") === "share";
 
     if (!packagesParam) {
       return new NextResponse(
@@ -344,7 +414,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Generate SVG
-    const svg = generateSVGChart(packageData, grouping);
+    const svg = generateSVGChart(packageData, grouping, zeroMode, isShare);
 
     return new NextResponse(svg, {
       headers: {
