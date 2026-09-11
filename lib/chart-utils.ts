@@ -1,18 +1,15 @@
-import {
-  isSameMonth,
-  isSameWeek,
-  isToday,
-  parseISO,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
-
 /**
  * Get the start date of the week for a given date
  * Week starts on Sunday (weekStartsOn: 0)
  */
 export const getWeekStart = (date: Date): string => {
-  const weekStart = startOfWeek(date, { weekStartsOn: 0 });
+  const weekStart = new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate() - date.getUTCDay()
+    )
+  );
   return weekStart.toISOString().split("T")[0];
 };
 
@@ -20,7 +17,9 @@ export const getWeekStart = (date: Date): string => {
  * Get the start date of the month for a given date
  */
 export const getMonthStart = (date: Date): string => {
-  const monthStart = startOfMonth(date);
+  const monthStart = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1)
+  );
   return monthStart.toISOString().split("T")[0];
 };
 
@@ -70,20 +69,20 @@ export const shouldRemoveIncompleteDate = (
   dateString: string,
   grouping: string
 ): boolean => {
-  const date = parseISO(dateString);
+  const date = new Date(`${dateString}T00:00:00.000Z`);
   const now = new Date();
 
   if (grouping === "day") {
     // For daily grouping, check if it's today
-    return isToday(date);
+    return dateString === now.toISOString().slice(0, 10);
   }
   if (grouping === "week") {
     // For weekly grouping, check if we're in the same week
-    return isSameWeek(date, now, { weekStartsOn: 0 });
+    return getWeekStart(date) === getWeekStart(now);
   }
   if (grouping === "month") {
     // For monthly grouping, check if we're in the same month
-    return isSameMonth(date, now);
+    return getMonthStart(date) === getMonthStart(now);
   }
 
   return false;

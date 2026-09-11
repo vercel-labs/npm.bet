@@ -53,6 +53,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 - `pnpm dev` - Start the development server
 - `pnpm build` - Build the production application
+- `pnpm test` - Compile the data utilities and run deterministic Node.js tests
 - `pnpm check` - Check for code quality issues
 - `pnpm fix` - Automatically fix code quality issues
 
@@ -64,6 +65,14 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 4. **Compare packages**: Add multiple packages to compare their download trends
 5. **Export chart**: Click the camera icon to download the chart as a PNG
 6. **Embed SVG**: Click the code icon to get embeddable SVG snippets for your README or website
+
+### Zero-download gaps
+
+Charts show npm-reported counts by default. Enable **Interpolate zeros** to estimate internal gaps of one or two consecutive zero-download days between positive reported values. The setting is preserved as `zeroMode=estimated` in shared URLs, SVG embeds, and OG previews. Missing dates, leading/trailing zeros, and longer gaps are not filled. Weeks start on Sunday and grouping uses UTC, matching npm's daily dates.
+
+Estimates use linear interpolation between the reported endpoints, rounded to whole downloads. Hollow markers identify affected points; tooltips retain the reported counts. Weekly/monthly totals and share percentages use the selected mode and disclose estimated inputs. A zero is not proof of an outage, so interpolation remains opt-in.
+
+Run `pnpm test` for the pure transformation tests. `tests/fixtures/download-gaps.json` contains frozen real responses and source timestamps for reproducible comparisons. A development-only fixture server is available with `pnpm exec node tests/serve-fixture.mjs`; run it in an isolated copy when another dev server is active. It listens on port 3001 by default and supports the fixture's exact package/date range. `pnpm exec node tests/verify-preview.mjs` verifies that preview's SVG, share, metadata, and OG responses.
 
 ## Project Structure
 

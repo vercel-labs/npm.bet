@@ -1,6 +1,12 @@
 "use client";
 
-import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
+import {
+  parseAsArrayOf,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryState,
+} from "nuqs";
+import { zeroModes } from "@/lib/download-data";
 
 export const useTimeRange = () =>
   useQueryState("timeRange", parseAsString.withDefault("last-year"));
@@ -13,3 +19,11 @@ export const usePackages = () =>
 
 export const useMetric = () =>
   useQueryState("metric", parseAsString.withDefault("downloads"));
+
+export const useZeroMode = () =>
+  useQueryState(
+    "zeroMode",
+    parseAsStringLiteral(zeroModes)
+      .withDefault("reported")
+      .withOptions({ history: "push" })
+  );
