@@ -23,6 +23,31 @@ export interface InterpolatedDownload extends DailyDownload {
 const DAY_MS = 86_400_000;
 const MAX_ZERO_DAYS = 7;
 
+const WEEKDAY_WINDOW = 3;
+
+// Mean of positive reported counts on the same weekday in nearby weeks.
+const weekdayBaseline = (
+  downloads: readonly DailyDownload[],
+  dates: readonly number[],
+  index: number
+): number | undefined => {
+  let sum = 0;
+  let count = 0;
+  for (let week = -WEEKDAY_WINDOW; week <= WEEKDAY_WINDOW; week++) {
+    const other = index + week * 7;
+    const value = downloads[other]?.downloads;
+    if (
+      week !== 0 &&
+      value > 0 &&
+      dates[other] - dates[index] === week * 7 * DAY_MS
+    ) {
+      sum += value;
+      count++;
+    }
+  }
+  return count > 0 ? sum / count : undefined;
+};
+
 export const parseZeroMode = (value: unknown): ZeroMode =>
   value === "estimated" ? "estimated" : "reported";
 
@@ -69,14 +94,24 @@ export const interpolateZeroDownloads = (
       right?.downloads > 0 &&
       dates[end] - dates[start - 1] === (length + 1) * DAY_MS
     ) {
+      const leftBase = weekdayBaseline(downloads, dates, start - 1);
+      const rightBase = weekdayBaseline(downloads, dates, end);
       for (let index = start; index < end; index++) {
         const progress =
           (dates[index] - dates[start - 1]) / (dates[end] - dates[start - 1]);
+        const base = weekdayBaseline(downloads, dates, index);
+        const linear =
+          left.downloads + (right.downloads - left.downloads) * progress;
+        const estimate =
+          base && leftBase && rightBase
+            ? base *
+              (left.downloads / leftBase +
+                (right.downloads / rightBase - left.downloads / leftBase) *
+                  progress)
+            : linear;
         result[index] = {
           ...result[index],
-          downloads: Math.round(
-            left.downloads + (right.downloads - left.downloads) * progress
-          ),
+          downloads: Math.round(estimate),
           estimated: true,
         };
       }
