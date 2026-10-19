@@ -68,7 +68,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ### Zero-download gaps
 
-Charts show npm-reported counts by default. Enable **Interpolate zeros** to estimate internal gaps of one or two consecutive zero-download days between positive reported values. The setting is preserved as `zeroMode=estimated` in shared URLs, SVG embeds, and OG previews. Missing dates, leading/trailing zeros, and longer gaps are not filled. Weeks start on Sunday and grouping uses UTC, matching npm's daily dates.
+Charts show npm-reported counts by default. Enable **Interpolate zeros** to estimate internal gaps of up to seven consecutive zero-download days between positive reported values. The setting is preserved as `zeroMode=estimated` in shared URLs, SVG embeds, and OG previews. Missing dates, leading/trailing zeros, and longer gaps are not filled. Weeks start on Sunday and grouping uses UTC, matching npm's daily dates.
 
 Estimates use linear interpolation between the reported endpoints, rounded to whole downloads. Hollow markers identify affected points; tooltips retain the reported counts. Weekly/monthly totals and share percentages use the selected mode and disclose estimated inputs. A zero is not proof of an outage, so interpolation remains opt-in.
 

@@ -35,6 +35,26 @@ describe("bounded zero interpolation", () => {
       [1000, 1200, 1400, 1600]
     );
   });
+  test("fills the three-day eve outage from 2026-10-13 to 2026-10-15", () => {
+    const result = interpolateZeroDownloads([
+      { day: "2026-10-12", downloads: 242780 },
+      { day: "2026-10-13", downloads: 0 },
+      { day: "2026-10-14", downloads: 0 },
+      { day: "2026-10-15", downloads: 0 },
+      { day: "2026-10-16", downloads: 306171 },
+    ]);
+    assert.deepEqual(values(result), [242780, 258628, 274476, 290323, 306171]);
+    assert.deepEqual(
+      result.map((item) => item.estimated),
+      [false, true, true, true, false]
+    );
+  });
+  test("fills up to seven consecutive days", () => {
+    assert.deepEqual(
+      values(interpolateZeroDownloads(daily([100, 0, 0, 0, 0, 0, 0, 0, 900]))),
+      [100, 200, 300, 400, 500, 600, 700, 800, 900]
+    );
+  });
   test("rounds once and handles decreasing counts", () => {
     assert.deepEqual(
       values(interpolateZeroDownloads(daily([100, 0, 0, 51]))),
@@ -45,7 +65,7 @@ describe("bounded zero interpolation", () => {
     [0, 100],
     [100, 0],
     [0, 0],
-    [100, 0, 0, 0, 200],
+    [100, 0, 0, 0, 0, 0, 0, 0, 0, 200],
     [0],
     [],
   ]) {
