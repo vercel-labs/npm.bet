@@ -21,7 +21,7 @@ export interface InterpolatedDownload extends DailyDownload {
 }
 
 const DAY_MS = 86_400_000;
-const MAX_ZERO_DAYS = 2;
+const MAX_ZERO_DAYS = 7;
 
 export const parseZeroMode = (value: unknown): ZeroMode =>
   value === "estimated" ? "estimated" : "reported";
