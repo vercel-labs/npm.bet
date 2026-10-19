@@ -37,13 +37,16 @@ describe("bounded zero interpolation", () => {
   });
   test("fills the three-day eve outage from 2026-10-13 to 2026-10-15", () => {
     const result = interpolateZeroDownloads([
-      { day: "2026-10-12", downloads: 242780 },
+      { day: "2026-10-12", downloads: 242_780 },
       { day: "2026-10-13", downloads: 0 },
       { day: "2026-10-14", downloads: 0 },
       { day: "2026-10-15", downloads: 0 },
-      { day: "2026-10-16", downloads: 306171 },
+      { day: "2026-10-16", downloads: 306_171 },
     ]);
-    assert.deepEqual(values(result), [242780, 258628, 274476, 290323, 306171]);
+    assert.deepEqual(
+      values(result),
+      [242_780, 258_628, 274_476, 290_323, 306_171]
+    );
     assert.deepEqual(
       result.map((item) => item.estimated),
       [false, true, true, true, false]
@@ -54,6 +57,18 @@ describe("bounded zero interpolation", () => {
       values(interpolateZeroDownloads(daily([100, 0, 0, 0, 0, 0, 0, 0, 900]))),
       [100, 200, 300, 400, 500, 600, 700, 800, 900]
     );
+  });
+  test("follows the weekly pattern when nearby weeks are available", () => {
+    const week = [1000, 1000, 1000, 1000, 1000, 500, 500];
+    const counts = [...week, ...week, ...week, ...week];
+    counts[14] = 0;
+    counts[15] = 0;
+    const result = interpolateZeroDownloads(daily(counts));
+    assert.deepEqual(
+      values(result).slice(12, 17),
+      [500, 500, 1000, 1000, 1000]
+    );
+    assert.equal(result[14].estimated, true);
   });
   test("rounds once and handles decreasing counts", () => {
     assert.deepEqual(
@@ -179,7 +194,7 @@ describe("data policy and grouping", () => {
     ).find((p) => p.date === "2026-09-02");
     assert.deepEqual(nextPoint, {
       date: "2026-09-02",
-      downloads: 9_792_335,
+      downloads: 10_834_833,
       reportedDownloads: 0,
       estimatedDays: 1,
     });
